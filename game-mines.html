@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusWin - Royal Mines Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #0b0e14; color: #fff; user-select: none; }
+        .glass-panel {
+            background: #141822;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.04);
+        }
+        .mine-tile {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .mine-tile:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(245, 158, 11, 0.4); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        #tutorial-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 14, 20, 0.85);
+            backdrop-blur: blur(8px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        #tutorial-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #vip-toast-container {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: #090e1a;
+            color: #ffffff;
+            padding: 16px 20px;
+            border-radius: 18px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 0, 0, 0.7);
+            border: 2px solid #1e293b;
+            font-family: 'Outfit', sans-serif;
+            z-index: 99999;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 90%;
+            max-width: 340px;
+        }
+
+        #vip-toast-container.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        #vip-toast-container.success {
+            background: linear-gradient(135deg, #064e3b 0%, #041f18 100%);
+            border-color: #10b981;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(16, 185, 129, 0.35);
+        }
+
+        #vip-toast-container.error {
+            background: linear-gradient(135deg, #7f1d1d 0%, #2a0808 100%);
+            border-color: #ef4444;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(239, 68, 68, 0.35);
+        }
+
+        #vip-toast-icon-box {
+            font-size: 22px;
+            background: rgba(0, 0, 0, 0.4);
+            min-width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+
+        #vip-toast-content {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        #vip-toast-heading {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #94a3b8;
+            font-weight: 800;
+        }
+
+        #vip-toast-message {
+            font-size: 14px;
+            font-weight: 900;
+            color: #ffffff;
+            margin-top: 1px;
+        }
+
+        input:disabled {
+            background-color: #05070a !important;
+            color: #475569 !important;
+            border-color: #1e293b !important;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-28">
+
+    <div id="tutorial-modal" class="show">
+        <div class="glass-panel rounded-3xl p-6 max-w-xs w-full text-center space-y-4 shadow-2xl border border-amber-500/50">
+            <div class="w-14 h-14 mx-auto bg-amber-500/20 rounded-2xl flex items-center justify-center text-3xl border border-amber-500/30 animate-bounce">💎</div>
+            <h3 class="text-sm font-black text-amber-400 uppercase tracking-widest">How to Play Mines</h3>
+            <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                Tiles par click karke Gems dhoondhein aur Bombs (💣) se bachein! Multiplier dheere-dheere badhega, savdhaani se cash out karein.
+            </p>
+            <button onclick="closeTutorial()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/30 transition-all">GOT IT, LET'S PLAY!</button>
+        </div>
+    </div>
+
+    <div id="vip-toast-container">
+        <div id="vip-toast-icon-box">⚡</div>
+        <div id="vip-toast-content">
+            <span id="vip-toast-heading">NexusWin VIP</span>
+            <span id="vip-toast-message">Notification message</span>
+        </div>
+    </div>
+
+    <header class="sticky top-0 z-50 bg-[#12151c]/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <button onclick="window.location.href='dashboard.html'" class="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center font-bold text-white hover:bg-slate-700">←</button>
+            <div>
+                <h2 class="text-xs font-black text-amber-400 uppercase tracking-wider">💎 Royal Mines Pro</h2>
+                <span class="text-[10px] text-emerald-400 font-semibold">● 1Win Algorithm Live</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-full shadow-inner">
+            <span class="text-[10px] uppercase font-bold text-slate-400">Bal:</span>
+            <span id="userBalance" class="text-xs font-black text-emerald-400">₹0.00</span>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto p-4 space-y-4">
+        <div class="glass-panel rounded-2xl p-3 flex items-center justify-between">
+            <div>
+                <span class="text-[10px] text-slate-400 font-bold uppercase block">Current Multiplier</span>
+                <span id="currentMultiplier" class="text-xl font-black text-amber-400">1.00x</span>
+            </div>
+            <div class="text-right">
+                <span class="text-[10px] text-slate-400 font-bold uppercase block">Potential Win</span>
+                <span id="potentialWin" class="text-xl font-black text-emerald-400">₹0.00</span>
+            </div>
+        </div>
+
+        <div class="glass-panel rounded-3xl p-4">
+            <div class="grid grid-cols-5 gap-2.5" id="minesGrid"></div>
+        </div>
+
+        <div class="glass-panel rounded-3xl p-4 space-y-3">
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-bold text-slate-300 uppercase">Bet Amount (₹)</span>
+            </div>
+            
+            <input type="number" id="betAmount" value="10" class="w-full bg-[#0b0e14] border border-slate-800 rounded-2xl px-4 py-3 text-xs text-white font-bold focus:outline-none focus:border-amber-500 shadow-inner">
+
+            <div class="space-y-1">
+                <div class="text-[10px] font-bold text-slate-400 uppercase">Quick Bet (10 - 100)</div>
+                <div class="grid grid-cols-6 gap-1">
+                    <button type="button" onclick="setBet(10)" class="quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">10</button>
+                    <button type="button" onclick="setBet(20)" class="quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">20</button>
+                    <button type="button" onclick="setBet(30)" class="quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">30</button>
+                    <button type="button" onclick="setBet(40)" class="quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">40</button>
+                    <button type="button" onclick="setBet(50)" class="quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">50</button>
+                    <button type="button" onclick="setBet(100)" class="quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">100</button>
+                </div>
+
+                <div class="text-[10px] font-bold text-slate-400 uppercase pt-0.5">High Stakes (300 - 1000)</div>
+                <div class="grid grid-cols-4 gap-1.5">
+                    <button type="button" onclick="setBet(300)" class="quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-amber-400 border border-slate-700/50">300</button>
+                    <button type="button" onclick="setBet(500)" class="quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-amber-400 border border-slate-700/50">500</button>
+                    <button type="button" onclick="setBet(700)" class="quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-amber-400 border border-slate-700/50">700</button>
+                    <button type="button" onclick="setBet(1000)" class="quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-amber-400 border border-slate-700/50">1000</button>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-1">
+                <span class="text-xs font-bold text-slate-300 uppercase">Mines Count (1-20)</span>
+                <span id="minesCountDisplay" class="text-xs font-black text-amber-400">3 Mines</span>
+            </div>
+            <input type="range" id="minesCount" min="1" max="20" value="3" oninput="document.getElementById('minesCountDisplay').innerText = this.value + ' Mines'" class="w-full accent-amber-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+
+            <div id="actionBtnContainer" class="pt-2">
+                <button onclick="startGame()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/30 transition-all">START GAME</button>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4d_UnCWkmKc3D65HjxvAGvJ4A5GXFIQQ",
+            authDomain: "nexuswin-aa829.firebaseapp.com",
+            databaseURL: "https://nexuswin-aa829-default-rtdb.firebaseio.com",
+            projectId: "nexuswin-aa829",
+            storageBucket: "nexuswin-aa829.firebasestorage.app",
+            messagingSenderId: "865579357605",
+            appId: "1:865579357605:web:7af15e869ce54756a8844c",
+            measurementId: "G-NTZY5VKYP0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let currentUser = null;
+        let userBalance = 0;
+        let gameStarted = false;
+        let revealedCount = 0;
+        let currentBet = 10;
+        let currentMultiplier = 1.00;
+        let totalMines = 3;
+        let clickedTiles = {};
+
+        window.closeTutorial = function() {
+            document.getElementById('tutorial-modal').classList.remove('show');
+        }
+
+        function showVIPToast(message, type = 'error') {
+            const container = document.getElementById('vip-toast-container');
+            const iconBox = document.getElementById('vip-toast-icon-box');
+            const msgEl = document.getElementById('vip-toast-message');
+            const headingEl = document.getElementById('vip-toast-heading');
+
+            container.className = '';
+            container.classList.add(type);
+
+            if(type === 'success') {
+                iconBox.innerText = '🏆';
+                headingEl.innerText = 'NexusWin • Victory';
+            } else {
+                iconBox.innerText = '🚨';
+                headingEl.innerText = 'NexusWin • Warning';
+            }
+
+            msgEl.innerText = message;
+            
+            setTimeout(() => container.classList.add('show'), 10);
+            setTimeout(() => {
+                container.classList.remove('show');
+            }, 3000);
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                onValue(ref(db, 'users/' + user.uid), (snap) => {
+                    if(snap.exists() && snap.val().balance !== undefined) {
+                        userBalance = snap.val().balance;
+                        document.getElementById('userBalance').innerText = `₹${userBalance.toFixed(2)}`;
+                    }
+                });
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        window.setBet = (amt) => { 
+            const betInput = document.getElementById('betAmount');
+            if(!betInput.disabled) {
+                betInput.value = amt; 
+            }
+        }
+
+        function toggleControls(disable) {
+            const input = document.getElementById('betAmount');
+            input.disabled = disable;
+
+            const minesRange = document.getElementById('minesCount');
+            minesRange.disabled = disable;
+            
+            const quickBtns = document.querySelectorAll('.quick-btn');
+            quickBtns.forEach(btn => {
+                btn.disabled = disable;
+                if(disable) {
+                    btn.classList.add('opacity-40', 'cursor-not-allowed');
+                } else {
+                    btn.classList.remove('opacity-40', 'cursor-not-allowed');
+                }
+            });
+        }
+
+        function renderBoard(clickable = false, revealAll = false) {
+            const grid = document.getElementById('minesGrid');
+            grid.innerHTML = '';
+            for(let i=0; i<25; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'mine-tile';
+                tile.id = `tile-${i}`;
+                
+                if(revealAll) {
+                    if(clickedTiles[i] === 'bomb') tile.innerHTML = "💣";
+                    else tile.innerHTML = "💎";
+                } else {
+                    tile.innerHTML = "❓";
+                    if(clickable) {
+                        tile.onclick = () => handleTileClick(i);
+                    }
+                }
+                grid.appendChild(tile);
+            }
+        }
+        renderBoard(false, false);
+
+        window.startGame = async function() {
+            currentBet = parseFloat(document.getElementById('betAmount').value);
+            totalMines = parseInt(document.getElementById('minesCount').value);
+
+            if(!currentBet || currentBet < 10) { 
+                showVIPToast("Minimum bet amount is ₹10!", "error"); 
+                return; 
+            }
+            if(currentBet > userBalance) { 
+                showVIPToast("Insufficient Balance! Please recharge.", "error"); 
+                return; 
+            }
+
+            userBalance -= currentBet;
+            await update(ref(db, `users/${currentUser.uid}`), { balance: userBalance });
+
+            gameStarted = true;
+            revealedCount = 0;
+            currentMultiplier = 1.00;
+            clickedTiles = {};
+
+            document.getElementById('currentMultiplier').innerText = "1.00x";
+            document.getElementById('potentialWin').innerText = `₹${currentBet.toFixed(2)}`;
+
+            document.getElementById('actionBtnContainer').innerHTML = `
+                <button onclick="cashOut()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/35 transition-all animate-pulse">
+                    CASH OUT (₹${currentBet.toFixed(2)})
+                </button>
+            `;
+            toggleControls(true);
+            renderBoard(true, false);
+        }
+
+        window.handleTileClick = async function(index) {
+            if(!gameStarted) return;
+            const tile = document.getElementById(`tile-${index}`);
+            if(tile.classList.contains('revealed')) return;
+
+            tile.classList.add('revealed');
+
+            // --- DYNAMIC SERVER-SIDE ALGORITHM (ADMIN FAVORABLE) ---
+            // Pehli click par bhi Bomb aane ka khatra ab 70% ya usse zyada rakha gaya hai taaki user turant na jeete.
+            let bombProbability = (totalMines / 25) * 1.35; 
+            if (revealedCount === 0) {
+                bombProbability = Math.max(0.65, bombProbability); // Pehli click par minimum 65% bomb aane ka chance
+            }
+
+            let isBomb = Math.random() < bombProbability;
+
+            if(isBomb) {
+                clickedTiles[index] = 'bomb';
+                tile.innerHTML = "💣";
+                tile.style.background = "rgba(239, 68, 68, 0.2)";
+                tile.style.borderColor = "#ef4444";
+                gameOver(false);
+            } else {
+                clickedTiles[index] = 'gem';
+                tile.innerHTML = "💎";
+                tile.style.background = "rgba(16, 185, 129, 0.2)";
+                tile.style.borderColor = "#10b981";
+                revealedCount++;
+
+                // --- SLOW & CONTROLLED MULTIPLIER (1.2x, 1.35x, 1.5x...) ---
+                if (revealedCount === 1) currentMultiplier = 1.20;
+                else if (revealedCount === 2) currentMultiplier = 1.35;
+                else if (revealedCount === 3) currentMultiplier = 1.55;
+                else {
+                    currentMultiplier = parseFloat((currentMultiplier * 1.15).toFixed(2));
+                }
+                
+                const potential = currentBet * currentMultiplier;
+                document.getElementById('currentMultiplier').innerText = `${currentMultiplier.toFixed(2)}x`;
+                document.getElementById('potentialWin').innerText = `₹${potential.toFixed(2)}`;
+
+                document.getElementById('actionBtnContainer').innerHTML = `
+                    <button onclick="cashOut()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/35 transition-all animate-pulse">
+                        CASH OUT (₹${potential.toFixed(2)})
+                    </button>
+                `;
+            }
+        }
+
+        window.cashOut = async function() {
+            if(!gameStarted) return;
+            gameStarted = false;
+            const winAmount = currentBet * currentMultiplier;
+            userBalance += winAmount;
+            await update(ref(db, `users/${currentUser.uid}`), { balance: userBalance });
+
+            showVIPToast(`Success! Won ₹${winAmount.toFixed(2)} (${currentMultiplier.toFixed(2)}x)!`, "success");
+            renderBoard(false, true);
+            endGameCleanup();
+        }
+
+        function gameOver(won) {
+            gameStarted = false;
+            renderBoard(false, true);
+            if(!won) {
+                showVIPToast(`Boom! You hit a bomb and lost ₹${currentBet}.`, "error");
+            }
+            endGameCleanup();
+        }
+
+        function endGameCleanup() {
+            gameStarted = false;
+            toggleControls(false);
+            document.getElementById('actionBtnContainer').innerHTML = `
+                <button onclick="startGame()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/30 transition-all">START GAME</button>
+            `;
+        }
+    </script>
+</body>
+</html>

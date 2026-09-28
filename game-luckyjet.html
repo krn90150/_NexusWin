@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusWin - Lucky Jet Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #0b0e14; color: #fff; user-select: none; }
+        .jet-screen {
+            background: radial-gradient(circle at bottom right, #081a18 0%, #0d0f15 70%);
+            border: 1px solid rgba(20, 184, 166, 0.15);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.9);
+        }
+        .panel-box {
+            background: #141822;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            box-shadow: 0 0 30px rgba(20, 184, 166, 0.03);
+        }
+        .grid-bg {
+            background-image: linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .history-pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        /* --- TUTORIAL POPUP MODAL --- */
+        #tutorial-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 14, 20, 0.85);
+            backdrop-blur: blur(8px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        #tutorial-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* --- HIGH-END ULTRA VIP NOTIFICATION MODAL --- */
+        #vip-toast-container {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: #090e1a;
+            color: #ffffff;
+            padding: 16px 20px;
+            border-radius: 18px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 0, 0, 0.7);
+            border: 2px solid #1e293b;
+            font-family: 'Outfit', sans-serif;
+            z-index: 99999;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 90%;
+            max-width: 340px;
+        }
+
+        #vip-toast-container.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        #vip-toast-container.success {
+            background: linear-gradient(135deg, #064e3b 0%, #041f18 100%);
+            border-color: #10b981;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(16, 185, 129, 0.35);
+        }
+
+        #vip-toast-container.error {
+            background: linear-gradient(135deg, #7f1d1d 0%, #2a0808 100%);
+            border-color: #ef4444;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(239, 68, 68, 0.35);
+        }
+
+        #vip-toast-icon-box {
+            font-size: 22px;
+            background: rgba(0, 0, 0, 0.4);
+            min-width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+
+        #vip-toast-content {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        #vip-toast-heading {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #94a3b8;
+            font-weight: 800;
+        }
+
+        #vip-toast-message {
+            font-size: 14px;
+            font-weight: 900;
+            color: #ffffff;
+            margin-top: 1px;
+        }
+
+        input:disabled {
+            background-color: #05070a !important;
+            color: #475569 !important;
+            border-color: #1e293b !important;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-28">
+
+    <!-- Tutorial Guide Modal on Entry -->
+    <div id="tutorial-modal" class="show">
+        <div class="panel-box rounded-3xl p-6 max-w-xs w-full text-center space-y-4 shadow-2xl border border-teal-500/50">
+            <div class="w-14 h-14 mx-auto bg-teal-500/20 rounded-2xl flex items-center justify-center text-3xl border border-teal-500/30 animate-bounce">🛸</div>
+            <h3 class="text-sm font-black text-teal-400 uppercase tracking-widest">How to Play Lucky Jet</h3>
+            <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                Flight takeoff hone se pehle bet lagayein. Jaise hi Jet upar jaye, crash hone se pehle <span class="text-emerald-400 font-bold">CASH OUT</span> button par click karke apna profit secure karein!
+            </p>
+            <button onclick="closeTutorial()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-teal-500/30 transition-all">GOT IT, LET'S PLAY!</button>
+        </div>
+    </div>
+
+    <!-- Ultra-VIP Professional Notification Modal -->
+    <div id="vip-toast-container">
+        <div id="vip-toast-icon-box">⚡</div>
+        <div id="vip-toast-content">
+            <span id="vip-toast-heading">NexusWin VIP</span>
+            <span id="vip-toast-message">Notification message</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-[#12151c]/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <button onclick="window.location.href='dashboard.html'" class="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center font-bold text-white hover:bg-slate-700">←</button>
+            <div>
+                <h2 class="text-xs font-black text-teal-400 uppercase tracking-wider">🛸 Lucky Jet Pro</h2>
+                <span class="text-[10px] text-emerald-400 font-semibold">● NexusWin Live</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-full shadow-inner">
+            <span class="text-[10px] uppercase font-bold text-slate-400">Bal:</span>
+            <span id="userBalance" class="text-xs font-black text-emerald-400">₹0.00</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-md mx-auto p-3 space-y-3">
+
+        <!-- History Bar -->
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-1 bg-[#141822] rounded-2xl border border-slate-800">
+            <span class="text-[9px] uppercase font-bold text-slate-500 pl-2">History:</span>
+            <div id="historyContainer" class="flex items-center gap-1.5">
+                <span class="history-pill text-teal-400">2.15x</span>
+                <span class="history-pill text-emerald-400">4.50x</span>
+                <span class="history-pill text-red-400">1.03x</span>
+            </div>
+        </div>
+
+        <!-- Jet Flight Screen -->
+        <div class="jet-screen rounded-3xl h-60 relative flex flex-col items-center justify-center overflow-hidden grid-bg">
+            <canvas id="flightCanvas" class="absolute inset-0 w-full h-full pointer-events-none z-0"></canvas>
+            <div id="jetObj" class="absolute left-6 bottom-6 text-3xl transition-all duration-75 hidden z-10 drop-shadow-[0_0_12px_rgba(20,184,166,0.9)]">
+                👨‍🚀🛸
+            </div>
+            <div id="multiplierDisplay" class="text-5xl font-black text-white tracking-wider drop-shadow-[0_0_25px_rgba(20,184,166,0.7)] z-20">
+                1.00x
+            </div>
+            <div id="statusText" class="text-xs font-bold text-teal-400 uppercase tracking-widest mt-2 z-20">
+                Prepare for Takeoff...
+            </div>
+        </div>
+
+        <!-- DOUBLE BETTING PANELS -->
+        <div class="space-y-3">
+            <!-- PANEL 1 -->
+            <div class="panel-box rounded-3xl p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Bet Panel 1</span>
+                    <button onclick="toggleAudio()" id="audioToggleBtn" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded-lg text-emerald-400 font-bold">🔊 Music On</button>
+                </div>
+                
+                <!-- Quick Bet Layout -->
+                <div class="space-y-1">
+                    <div class="text-[9px] font-bold text-slate-400 uppercase">Quick Bet</div>
+                    <div class="grid grid-cols-5 gap-1">
+                        <button type="button" onclick="setBet(1, 10)" class="quick-btn-1 py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">10</button>
+                        <button type="button" onclick="setBet(1, 50)" class="quick-btn-1 py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">50</button>
+                        <button type="button" onclick="setBet(1, 100)" class="quick-btn-1 py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">100</button>
+                        <button type="button" onclick="setBet(1, 500)" class="quick-btn-1 py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">500</button>
+                        <button type="button" onclick="setBet(1, 1000)" class="quick-btn-1 py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">1000</button>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <input type="number" id="betInput1" value="100" class="w-1/3 bg-[#0b0e14] border border-slate-800 rounded-2xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-teal-500 shadow-inner">
+                    <div id="btnContainer1" class="flex-1">
+                        <button onclick="placeBet(1)" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-teal-500/30 transition-all">BET</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL 2 -->
+            <div class="panel-box rounded-3xl p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Bet Panel 2</span>
+                </div>
+
+                <!-- Quick Bet Layout -->
+                <div class="space-y-1">
+                    <div class="text-[9px] font-bold text-slate-400 uppercase">Quick Bet</div>
+                    <div class="grid grid-cols-5 gap-1">
+                        <button type="button" onclick="setBet(2, 10)" class="quick-btn-2 py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">10</button>
+                        <button type="button" onclick="setBet(2, 50)" class="quick-btn-2 py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">50</button>
+                        <button type="button" onclick="setBet(2, 100)" class="quick-btn-2 py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">100</button>
+                        <button type="button" onclick="setBet(2, 500)" class="quick-btn-2 py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">500</button>
+                        <button type="button" onclick="setBet(2, 1000)" class="quick-btn-2 py-1 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300 border border-slate-700/50">1000</button>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <input type="number" id="betInput2" value="100" class="w-1/3 bg-[#0b0e14] border border-slate-800 rounded-2xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-teal-500 shadow-inner">
+                    <div id="btnContainer2" class="flex-1">
+                        <button onclick="placeBet(2)" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-teal-500/30 transition-all">BET</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Firebase & Game Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4d_UnCWkmKc3D65HjxvAGvJ4A5GXFIQQ",
+            authDomain: "nexuswin-aa829.firebaseapp.com",
+            databaseURL: "https://nexuswin-aa829-default-rtdb.firebaseio.com",
+            projectId: "nexuswin-aa829",
+            storageBucket: "nexuswin-aa829.firebasestorage.app",
+            messagingSenderId: "865579357605",
+            appId: "1:865579357605:web:7af15e869ce54756a8844c",
+            measurementId: "G-NTZY5VKYP0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let currentUser = null;
+        let userBalance = 0;
+        let gameActive = false;
+        let currentMultiplier = 1.00;
+        let crashPoint = 1.00;
+        let gameInterval = null;
+        let soundEnabled = true;
+        let multiplierHistory = [1.50, 2.10, 1.11, 1.20, 3.20];
+
+        let bet1Active = false, bet1Amount = 0;
+        let bet2Active = false, bet2Amount = 0;
+
+        let audioCtx = null;
+        let musicInterval = null;
+
+        window.closeTutorial = function() {
+            document.getElementById('tutorial-modal').classList.remove('show');
+        }
+
+        function showVIPToast(message, type = 'error') {
+            const container = document.getElementById('vip-toast-container');
+            const iconBox = document.getElementById('vip-toast-icon-box');
+            const msgEl = document.getElementById('vip-toast-message');
+            const headingEl = document.getElementById('vip-toast-heading');
+
+            container.className = '';
+            container.classList.add(type);
+
+            if(type === 'success') {
+                iconBox.innerText = '🏆';
+                headingEl.innerText = 'NexusWin • Victory';
+            } else {
+                iconBox.innerText = '🚨';
+                headingEl.innerText = 'NexusWin • Warning';
+            }
+
+            msgEl.innerText = message;
+            
+            setTimeout(() => container.classList.add('show'), 10);
+            setTimeout(() => {
+                container.classList.remove('show');
+            }, 3000);
+        }
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function startBGM() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (musicInterval) clearInterval(musicInterval);
+
+            const notes = [220, 261.63, 329.63, 392.00];
+            let index = 0;
+
+            musicInterval = setInterval(() => {
+                if (!soundEnabled || !gameActive || !audioCtx) return;
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(notes[index], audioCtx.currentTime);
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(600, audioCtx.currentTime);
+
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.22);
+
+                index = (index + 1) % notes.length;
+            }, 300);
+        }
+
+        function stopBGM() {
+            if (musicInterval) {
+                clearInterval(musicInterval);
+                musicInterval = null;
+            }
+        }
+
+        window.toggleAudio = () => {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('audioToggleBtn');
+            btn.innerText = soundEnabled ? "🔊 Music On" : "🔇 Music Off";
+            if (!soundEnabled) stopBGM();
+            else if (gameActive) startBGM();
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                onValue(ref(db, 'users/' + user.uid), (snap) => {
+                    if(snap.exists() && snap.val().balance !== undefined) {
+                        userBalance = snap.val().balance;
+                        document.getElementById('userBalance').innerText = `₹${userBalance.toFixed(2)}`;
+                    }
+                });
+                updateHistoryUI();
+                startCountdown();
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        window.setBet = (panelId, amt) => {
+            const input = document.getElementById(`betInput${panelId}`);
+            if (!input.disabled) {
+                input.value = amt;
+            }
+        }
+
+        function updateHistoryUI() {
+            const container = document.getElementById('historyContainer');
+            container.innerHTML = '';
+            multiplierHistory.slice(-7).forEach(val => {
+                const span = document.createElement('span');
+                span.className = `history-pill ${val >= 2.00 ? 'text-teal-400' : 'text-slate-300'}`;
+                span.innerText = `${val.toFixed(2)}x`;
+                container.appendChild(span);
+            });
+        }
+
+        function startCountdown() {
+            if (gameActive) return;
+            let count = 4;
+            const statusText = document.getElementById('statusText');
+            document.getElementById('multiplierDisplay').innerText = "1.00x";
+            document.getElementById('jetObj').classList.add('hidden');
+            
+            const canvas = document.getElementById('flightCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const timer = setInterval(() => {
+                if (count > 0) {
+                    statusText.innerText = `Next Flight in ${count}s...`;
+                    count--;
+                } else {
+                    clearInterval(timer);
+                    startFlightRound();
+                }
+            }, 1000);
+        }
+
+        window.placeBet = async function(panelId) {
+            initAudio();
+            if (gameActive) {
+                showVIPToast("Flight is already in progress!", "error");
+                return;
+            }
+            const amt = parseFloat(document.getElementById(`betInput${panelId}`).value);
+            if (!amt || amt < 10) { 
+                showVIPToast("Minimum bet amount is ₹10!", "error"); 
+                return; 
+            }
+            if (amt > userBalance) { 
+                showVIPToast("Insufficient Balance! Please recharge.", "error"); 
+                return; 
+            }
+
+            userBalance -= amt;
+            await update(ref(db, `users/${currentUser.uid}`), { balance: userBalance });
+
+            if (panelId === 1) { bet1Active = true; bet1Amount = amt; }
+            else { bet2Active = true; bet2Amount = amt; }
+
+            document.getElementById(`betInput${panelId}`).disabled = true;
+            document.querySelectorAll(`.quick-btn-${panelId}`).forEach(b => {
+                b.disabled = true;
+                b.classList.add('opacity-40', 'cursor-not-allowed');
+            });
+
+            document.getElementById(`btnContainer${panelId}`).innerHTML = `
+                <button class="w-full py-2.5 rounded-2xl bg-amber-500/25 border border-amber-500/50 text-amber-300 font-black text-xs uppercase tracking-widest cursor-not-allowed">
+                    LOCKED (₹${amt})
+                </button>
+            `;
+        }
+
+        function startFlightRound() {
+            // --- STRICT HOUSE EDGE / ADMIN PROFIT ALGORITHM ---
+            // 75% चांस है कि क्रैश बहुत जल्दी (1.01x से 1.60x के बीच) हो जाए, ताकि एडमिन का प्रॉफिट हमेशा ज्यादा रहे।
+            const rand = Math.random();
+            if (rand < 0.10) {
+                crashPoint = 1.00; // तुरंत क्रैश
+            } else if (rand < 0.75) {
+                crashPoint = parseFloat((1.01 + Math.random() * 0.60).toFixed(2)); // अर्ली क्रैश (1.01x - 1.60x)
+            } else if (rand < 0.92) {
+                crashPoint = parseFloat((1.61 + Math.random() * 1.50).toFixed(2)); // मीडियम क्रैश
+            } else {
+                crashPoint = parseFloat((3.11 + Math.random() * 6.00).toFixed(2)); // कभी-कभार बड़ा मल्टीप्लेयर
+            }
+
+            currentMultiplier = 1.00;
+            gameActive = true;
+            document.getElementById('statusText').innerText = "🚀 Lucky Jet Flying...";
+            document.getElementById('jetObj').classList.remove('hidden');
+
+            startBGM();
+
+            if (bet1Active) {
+                document.getElementById('btnContainer1').innerHTML = `<button onclick="cashOut(1)" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/35 transition-all animate-pulse">CASH OUT</button>`;
+            }
+            if (bet2Active) {
+                document.getElementById('btnContainer2').innerHTML = `<button onclick="cashOut(2)" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/35 transition-all animate-pulse">CASH OUT</button>`;
+            }
+
+            const canvas = document.getElementById('flightCanvas');
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            const ctx = canvas.getContext('2d');
+
+            let progress = 0;
+            const jet = document.getElementById('jetObj');
+
+            // --- SLOWER & SMOOTHER MULTIPLIER SPEED ---
+            // पहले increment बहुत फास्ट था, अब इसे बहुत धीमा और स्मूथ कर दिया गया है ताकि यूज़र आराम से देख सके और कैश आउट कर सके।
+            gameInterval = setInterval(() => {
+                currentMultiplier += 0.008 + (currentMultiplier * 0.008); 
+                progress += 1.0;
+
+                let x = 20 + progress * 1.5;
+                let y = (canvas.height - 30) - (Math.pow(progress, 1.1) * 1.2);
+                if (x > canvas.width - 40) x = canvas.width - 40;
+                if (y < 30) y = 30;
+
+                jet.style.left = `${x}px`;
+                jet.style.bottom = `${canvas.height - y}px`;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.beginPath();
+                ctx.moveTo(20, canvas.height - 30);
+                ctx.quadraticCurveTo(20 + progress, canvas.height - 30, x, y);
+                ctx.strokeStyle = '#14b8a6';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                if (currentMultiplier >= crashPoint) {
+                    currentMultiplier = crashPoint;
+                    endFlightRound();
+                } else {
+                    document.getElementById('multiplierDisplay').innerText = `${currentMultiplier.toFixed(2)}x`;
+                }
+            }, 100); // इंटरवल स्पीड को थोड़ा रिलैक्स किया गया है ताकि मूवमेंट नेचुरल लगे
+        }
+
+        window.cashOut = async function(panelId) {
+            let active = panelId === 1 ? bet1Active : bet2Active;
+            let amt = panelId === 1 ? bet1Amount : bet2Amount;
+            if (!gameActive || !active) return;
+
+            const win = amt * currentMultiplier;
+            userBalance += win;
+            await update(ref(db, `users/${currentUser.uid}`), { balance: userBalance });
+
+            showVIPToast(`Success! Won ₹${win.toFixed(2)} (${currentMultiplier.toFixed(2)}x)!`, "success");
+            
+            if (panelId === 1) bet1Active = false; else bet2Active = false;
+
+            document.getElementById(`betInput${panelId}`).disabled = false;
+            document.querySelectorAll(`.quick-btn-${panelId}`).forEach(b => {
+                b.disabled = false;
+                b.classList.remove('opacity-40', 'cursor-not-allowed');
+            });
+
+            document.getElementById(`btnContainer${panelId}`).innerHTML = `<button onclick="placeBet(${panelId})" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-teal-500/30 transition-all">BET</button>`;
+        }
+
+        function endFlightRound() {
+            clearInterval(gameInterval);
+            stopBGM();
+            gameActive = false;
+            document.getElementById('multiplierDisplay').innerText = `${currentMultiplier.toFixed(2)}x`;
+            document.getElementById('statusText').innerText = `💥 CRASHED @ ${currentMultiplier.toFixed(2)}x`;
+
+            if (bet1Active || bet2Active) {
+                let totalLost = (bet1Active ? bet1Amount : 0) + (bet2Active ? bet2Amount : 0);
+                showVIPToast(`Jet Crashed! Lost ₹${totalLost}.`, "error");
+            }
+
+            multiplierHistory.push(currentMultiplier);
+            updateHistoryUI();
+
+            bet1Active = false;
+            bet2Active = false;
+
+            for (let p = 1; p <= 2; p++) {
+                document.getElementById(`betInput${p}`).disabled = false;
+                document.querySelectorAll(`.quick-btn-${p}`).forEach(b => {
+                    b.disabled = false;
+                    b.classList.remove('opacity-40', 'cursor-not-allowed');
+                });
+                document.getElementById(`btnContainer${p}`).innerHTML = `<button onclick="placeBet(${p})" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-teal-500/30 transition-all">BET</button>`;
+            }
+
+            setTimeout(startCountdown, 3500);
+        }
+    </script>
+</body>
+</html>

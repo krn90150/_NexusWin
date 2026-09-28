@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusWin - Cyber Mines</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #05070f; color: #fff; user-select: none; }
+        .glass-panel { background: rgba(13, 17, 28, 0.92); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 20px 40px rgba(0,0,0,0.7); }
+        .mine-tile {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #111827 0%, #0b0f19 100%);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.05), 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .mine-tile:hover:not(:disabled) {
+            border-color: rgba(56, 189, 248, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.2);
+        }
+        .mine-tile:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+        .tile-revealed-gem {
+            background: radial-gradient(circle, rgba(16,185,129,0.3) 0%, rgba(6,78,59,0.8) 100%);
+            border-color: #10b981;
+            box-shadow: 0 0 15px rgba(16,185,129,0.4);
+        }
+        .tile-revealed-mine {
+            background: radial-gradient(circle, rgba(244,63,94,0.4) 0%, rgba(127,29,29,0.8) 100%);
+            border-color: #f43f5e;
+            box-shadow: 0 0 20px rgba(244,63,94,0.6);
+        }
+
+        /* --- TUTORIAL POPUP MODAL --- */
+        #tutorial-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 7, 15, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        #tutorial-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        @keyframes vipSlideDown {
+            0% { transform: translateY(-120%) scale(0.9); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        @keyframes vipSlideUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-120%) scale(0.9); opacity: 0; }
+        }
+        .vip-toast-enter { animation: vipSlideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .vip-toast-exit { animation: vipSlideUp 0.3s ease-in forwards; }
+        
+        input:disabled, button:disabled, select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-28 flex flex-col justify-between">
+
+    <!-- Tutorial Guide Modal on Entry -->
+    <div id="tutorial-modal" class="show">
+        <div class="glass-panel rounded-3xl p-6 max-w-xs w-full text-center space-y-4 shadow-2xl border border-sky-500/50">
+            <div class="w-14 h-14 mx-auto bg-sky-500/20 rounded-2xl flex items-center justify-center text-3xl border border-sky-500/30 animate-bounce">💣</div>
+            <h3 class="text-sm font-black text-sky-400 uppercase tracking-widest">How to Play Cyber Mines</h3>
+            <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                Apna Bet amount aur Mines count select karein, phir <span class="text-sky-400 font-bold">Start Game</span> dabayein. Grid me se <span class="text-emerald-400 font-bold">Diamonds 💎</span> nikalein aur bomb se bachein! Multiplier badhega aur aap kabhi bhi <span class="text-emerald-400 font-bold">Cashout</span> kar sakte hain.
+            </p>
+            <button onclick="closeTutorial()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-sky-500/30 transition-all">GOT IT, LET'S PLAY!</button>
+        </div>
+    </div>
+
+    <!-- VIP Toast Container -->
+    <div id="toastContainer" class="fixed top-5 left-0 right-0 z-[9999] flex justify-center pointer-events-none px-4"></div>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-slate-800 px-4 py-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <button onclick="window.location.href='dashboard.html'" class="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center font-bold text-white hover:bg-slate-700">←</button>
+            <div>
+               <h2 class="text-xs font-black text-sky-400 uppercase tracking-wider">💣 Cyber Mines</h2>
+               <span class="text-[10px] text-emerald-400 font-semibold">● Provably Fair Grid</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-full">
+            <span class="text-[10px] uppercase font-bold text-slate-400">Bal:</span>
+            <span id="userBalance" class="text-xs font-black text-emerald-400">₹0.00</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-md mx-auto w-full p-4 space-y-4">
+
+        <!-- Game Arena & Stats -->
+        <div class="glass-panel rounded-3xl p-4 space-y-3">
+            <div class="flex justify-between items-center bg-slate-900/80 px-4 py-2.5 rounded-2xl border border-slate-800">
+                <div>
+                   <span class="text-[9px] font-bold text-slate-400 uppercase block">Current Multiplier</span>
+                   <span id="currentMult" class="text-base font-black text-amber-400">1.00x</span>
+                </div>
+                <div class="text-right">
+                   <span class="text-[9px] font-bold text-slate-400 uppercase block">Potential Payout</span>
+                   <span id="potentialPayout" class="text-base font-black text-emerald-400">₹0.00</span>
+                </div>
+            </div>
+
+            <!-- Mines 5x5 Grid Container -->
+            <div id="minesGrid" class="grid grid-cols-5 gap-2.5 p-1">
+                <!-- Grid items generated dynamically -->
+            </div>
+
+            <div id="gameStatus" class="text-center text-xs font-bold text-sky-300">
+                Select your bet & mines count, then click Start Game!
+            </div>
+        </div>
+
+        <!-- Controls & Betting Panel -->
+        <div class="glass-panel rounded-3xl p-4 space-y-3">
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-bold text-slate-300 uppercase">Bet Amount (₹)</span>
+            </div>
+            
+            <!-- Bet Input Box (Default ₹10) -->
+            <input type="number" id="betAmount" value="10" class="w-full bg-[#03050a] border border-slate-800 rounded-2xl px-4 py-3 text-xs text-white font-bold focus:outline-none focus:border-sky-500">
+
+            <!-- Quick Bets Layout (Row 1 & Row 2) -->
+            <div class="space-y-1.5">
+                <div class="grid grid-cols-6 gap-1">
+                    <button type="button" onclick="setBet(10)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">10</button>
+                    <button type="button" onclick="setBet(20)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">20</button>
+                    <button type="button" onclick="setBet(30)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">30</button>
+                    <button type="button" onclick="setBet(40)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">40</button>
+                    <button type="button" onclick="setBet(50)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">50</button>
+                    <button type="button" onclick="setBet(100)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">100</button>
+                </div>
+                <div class="grid grid-cols-5 gap-1">
+                    <button type="button" onclick="setBet(200)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">200</button>
+                    <button type="button" onclick="setBet(400)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">400</button>
+                    <button type="button" onclick="setBet(600)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">600</button>
+                    <button type="button" onclick="setBet(800)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">800</button>
+                    <button type="button" onclick="setBet(1000)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">1000</button>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-1">
+                <span class="text-xs font-bold text-slate-300 uppercase">Mines Count</span>
+                <select id="minesCount" class="bg-[#03050a] border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-sky-400 font-bold focus:outline-none focus:border-sky-500">
+                    <option value="3">3 Mines</option>
+                    <option value="5" selected>5 Mines</option>
+                    <option value="10">10 Mines</option>
+                    <option value="15">15 Mines</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-1">
+                <button id="startBtn" onclick="startGame()" class="py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-sky-500/30">
+                    🚀 START GAME
+                </button>
+                <button id="cashoutBtn" onclick="cashout()" disabled class="py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 font-black text-xs uppercase tracking-wider opacity-50 cursor-not-allowed shadow-lg shadow-emerald-500/30">
+                    💰 CASHOUT
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Firebase & Game Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4d_UnCWkmKc3D65HjxvAGvJ4A5GXFIQQ",
+            authDomain: "nexuswin-aa829.firebaseapp.com",
+            databaseURL: "https://nexuswin-aa829-default-rtdb.firebaseio.com",
+            projectId: "nexuswin-aa829",
+            storageBucket: "nexuswin-aa829.firebasestorage.app",
+            messagingSenderId: "865579357605",
+            appId: "1:865579357605:web:7af15e869ce54756a8844c",
+            measurementId: "G-NTZY5VKYP0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let currentUser = null;
+        let userBalance = 0;
+        let activeBet = 10;
+        let gameActive = false;
+        let mines = [];
+        let revealedTiles = 0;
+        let currentMultiplier = 1.0;
+        let totalMinesCount = 5;
+        let userControlOverride = 'normal';
+
+        window.closeTutorial = function() {
+            document.getElementById('tutorial-modal').classList.remove('show');
+        }
+
+        function showVipToast(title, message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            container.innerHTML = '';
+            
+            const toast = document.createElement('div');
+            let bgGradient = 'linear-gradient(135deg, #0f172aee 0%, #090d16ee 100%)';
+            let borderColor = '#334155';
+            let icon = '🚀';
+            let titleColor = 'text-white';
+
+            if(type === 'success') {
+                bgGradient = 'linear-gradient(135deg, #064e3b 0%, #022c22 100%)';
+                borderColor = '#10b981';
+                icon = '🏆';
+                titleColor = 'text-emerald-400';
+            } else if(type === 'error') {
+                bgGradient = 'linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)';
+                borderColor = '#f43f5e';
+                icon = '🚨';
+                titleColor = 'text-rose-400';
+            }
+
+            toast.className = `pointer-events-auto flex items-center gap-4 px-5 py-4 rounded-3xl shadow-2xl backdrop-blur-2xl border-2 vip-toast-enter max-w-sm w-full mx-4`;
+            toast.style.background = bgGradient;
+            toast.style.borderColor = borderColor;
+            toast.style.boxShadow = `0 20px 40px rgba(0,0,0,0.6), 0 0 20px ${borderColor}44`;
+            
+            toast.innerHTML = `
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl bg-black/30 border border-white/10 shrink-0 shadow-inner">
+                    ${icon}
+                </div>
+                <div class="flex-1">
+                    <div class="text-[13px] font-black uppercase tracking-wider ${titleColor}">${title}</div>
+                    <div class="text-xs font-semibold text-slate-200 mt-0.5">${message}</div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('vip-toast-enter');
+                toast.classList.add('vip-toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                onValue(ref(db, 'users/' + user.uid), (snap) => {
+                    if(snap.exists()) {
+                        const val = snap.val();
+                        if(val.balance !== undefined) {
+                            userBalance = val.balance;
+                            document.getElementById('userBalance').innerText = `₹${userBalance.toFixed(2)}`;
+                        }
+                        if(val.controlOverride) {
+                            userControlOverride = val.controlOverride;
+                        }
+                    }
+                });
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        window.setBet = (amt) => {
+            if(!gameActive) {
+                activeBet = amt;
+                document.getElementById('betAmount').value = amt;
+            }
+        }
+
+        function toggleControls(disable) {
+            const input = document.getElementById('betAmount');
+            const minesSelect = document.getElementById('minesCount');
+            
+            input.disabled = disable;
+            minesSelect.disabled = disable;
+            
+            const quickBtns = document.querySelectorAll('.quick-btn');
+            quickBtns.forEach(btn => {
+                btn.disabled = disable;
+            });
+        }
+
+        function renderGrid(revealAll = false) {
+            const grid = document.getElementById('minesGrid');
+            grid.innerHTML = '';
+            for(let i = 0; i < 25; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'mine-tile';
+                btn.dataset.index = i;
+                
+                if(revealAll) {
+                    btn.disabled = true;
+                    if(mines.includes(i)) {
+                        btn.innerHTML = '💣';
+                        btn.classList.add('tile-revealed-mine');
+                    } else {
+                        btn.innerHTML = '💎';
+                        btn.classList.add('tile-revealed-gem');
+                    }
+                } else {
+                    btn.innerHTML = '';
+                    btn.onclick = () => clickTile(i, btn);
+                }
+                grid.appendChild(btn);
+            }
+        }
+
+        window.startGame = async function() {
+            if(gameActive) return;
+            let bet = parseFloat(document.getElementById('betAmount').value);
+            totalMinesCount = parseInt(document.getElementById('minesCount').value);
+
+            if(!bet || bet < 10) {
+                showVipToast("Invalid Bet", "Minimum bet amount is ₹10", "error");
+                return;
+            }
+            if(bet > userBalance) {
+                showVipToast("Low Balance", "Insufficient wallet balance!", "error");
+                return;
+            }
+
+            activeBet = bet;
+            userBalance -= bet;
+            await update(ref(db, `users/${currentUser.uid}`), { balance: userBalance });
+
+            gameActive = true;
+            revealedTiles = 0;
+            currentMultiplier = 1.0;
+            document.getElementById('currentMult').innerText = '1.00x';
+            document.getElementById('potentialPayout').innerText = `₹${bet.toFixed(2)}`;
+            document.getElementById('gameStatus').innerText = "Game in progress! Click tiles to find diamonds 💎";
+
+            mines = [];
+            while(mines.length < totalMinesCount) {
+                let r = Math.floor(Math.random() * 25);
+                if(!mines.includes(r)) mines.push(r);
+            }
+
+            toggleControls(true);
+
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('cashoutBtn').disabled = false;
+
+            renderGrid(false);
+        }
+
+        async function clickTile(index, btnElement) {
+            if(!gameActive) return;
+            if(btnElement.disabled) return;
+
+            btnElement.disabled = true;
+
+            let hitMine = mines.includes(index);
+            if(userControlOverride === 'lose' && revealedTiles === 0) {
+                hitMine = true;
+            }
+
+            if(hitMine) {
+                btnElement.innerHTML = '💣';
+                btnElement.classList.add('tile-revealed-mine');
+                gameActive = false;
+                renderGrid(true);
+
+                document.getElementById('gameStatus').innerHTML = `<span class="text-rose-400">💥 Boom! You hit a mine. Lost ₹${activeBet.toFixed(2)}</span>`;
+                showVipToast("Game Over", `You hit a mine and lost ₹${activeBet.toFixed(2)}`, "error");
+
+                resetControlsAfterGame();
+                return;
+            }
+
+            btnElement.innerHTML = '💎';
+            btnElement.classList.add('tile-revealed-gem');
+            revealedTiles++;
+
+            let multIncrement = 0.2 + (totalMinesCount * 0.08);
+            currentMultiplier += multIncrement * revealedTiles;
+            
+            let potentialWin = activeBet * currentMultiplier;
+            document.getElementById('currentMult').innerText = currentMultiplier.toFixed(2) + 'x';
+            document.getElementById('potentialPayout').innerText = `₹${potentialWin.toFixed(2)}`;
+            document.getElementById('gameStatus').innerHTML = `<span class="text-emerald-400">Safe! Pick another tile or cash out.</span>`;
+        }
+
+        window.cashout = async function() {
+            if(!gameActive || revealedTiles === 0) return;
+            gameActive = false;
+
+            let winAmt = activeBet * currentMultiplier;
+            userBalance += winAmt;
+            await update(ref(db, `users/${currentUser.uid}`), { balance: userBalance });
+
+            renderGrid(true);
+            document.getElementById('gameStatus').innerHTML = `<span class="text-emerald-400">🎉 Cashed out successfully! Won ₹${winAmt.toFixed(2)}</span>`;
+            showVipToast("Cashout Successful!", `Won ₹${winAmt.toFixed(2)} at ${currentMultiplier.toFixed(2)}x multiplier`, "success");
+
+            resetControlsAfterGame();
+        }
+
+        function resetControlsAfterGame() {
+            toggleControls(false);
+
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('cashoutBtn').disabled = true;
+        }
+
+        renderGrid(false);
+    </script>
+</body>
+</html>

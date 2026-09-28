@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusWin - Help & Support</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+        .glass-panel {
+            background: rgba(13, 17, 28, 0.85);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+        }
+    </style>
+</head>
+<body class="bg-[#030712] text-slate-100 min-h-screen p-4 pb-24 flex flex-col justify-between">
+
+    <div class="max-w-md mx-auto w-full space-y-6">
+        <!-- Top Navigation Bar -->
+        <header class="glass-panel rounded-2xl px-4 py-3.5 flex items-center justify-between border border-slate-800">
+            <button onclick="window.location.href='dashboard.html'" class="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1">← Back to Lobby</button>
+            <h1 class="text-xs font-black text-white uppercase tracking-wider">Help & Support</h1>
+        </header>
+
+        <!-- Support Banner -->
+        <div class="glass-panel rounded-3xl p-6 border border-slate-800 text-center relative overflow-hidden">
+            <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-600 to-violet-500 mx-auto flex items-center justify-center font-black text-2xl text-white shadow-xl shadow-indigo-600/30 border border-white/10 mb-3">🎧</div>
+            <h2 class="text-sm font-black text-white tracking-wide uppercase">24/7 Dedicated Support</h2>
+            <p class="text-[11px] text-slate-400 font-medium mt-1">Facing issues with deposit, withdrawal, or gameplay? Contact our official agent below.</p>
+        </div>
+
+        <!-- Contact Options -->
+        <div class="space-y-3">
+            <a href="https://t.me/" target="_blank" class="glass-panel rounded-2xl p-4 flex items-center justify-between hover:border-indigo-500/50 transition-all border border-slate-800 group">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-400 text-lg border border-sky-500/20">✈️</div>
+                    <div>
+                        <h3 class="text-xs font-bold text-white group-hover:text-indigo-400 transition-colors">Telegram Support</h3>
+                        <p class="text-[10px] text-slate-400">Instant response from admin team</p>
+                    </div>
+                </div>
+                <span class="text-xs font-bold text-indigo-400">Connect →</span>
+            </a>
+
+            <a href="https://wa.me/" target="_blank" class="glass-panel rounded-2xl p-4 flex items-center justify-between hover:border-emerald-500/50 transition-all border border-slate-800 group">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-lg border border-emerald-500/20">💬</div>
+                    <div>
+                        <h3 class="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">WhatsApp Help Desk</h3>
+                        <p class="text-[10px] text-slate-400">Direct chat with financial desk</p>
+                    </div>
+                </div>
+                <span class="text-xs font-bold text-emerald-400">Connect →</span>
+            </a>
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="glass-panel rounded-3xl p-5 border border-slate-800 space-y-3">
+            <h3 class="text-xs font-extrabold text-slate-300 uppercase tracking-widest mb-2">Frequently Asked Questions</h3>
+            
+            <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800">
+                <h4 class="text-xs font-bold text-white mb-1">How long does deposit verification take?</h4>
+                <p class="text-[10px] text-slate-400 leading-relaxed">Once you submit your 12-digit UTR number, admin verifies it within 5 to 10 minutes and credits the amount to your live balance.</p>
+            </div>
+
+            <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800">
+                <h4 class="text-xs font-bold text-white mb-1">What is the minimum withdrawal limit?</h4>
+                <p class="text-[10px] text-slate-400 leading-relaxed">Minimum withdrawal is ₹100. Payouts are safely processed directly to your submitted UPI ID.</p>
+            </div>
+        </div>
+    </div>
+</body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navbar Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Outfit', sans-serif; }</style>
+</head>
+<body class="bg-[#030712] min-h-screen text-slate-100 p-4">
+    <nav class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-[#0d111c]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-2 flex items-center justify-around shadow-2xl z-50">
+        <a href="dashboard.html" class="flex flex-col items-center justify-center py-1.5 px-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group">
+            <span class="text-lg group-hover:scale-110 transition-transform">🏠</span>
+            <span class="text-[9px] font-bold uppercase tracking-wider mt-0.5">Home</span>
+        </a>
+        <a href="history.html" class="flex flex-col items-center justify-center py-1.5 px-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group">
+            <span class="text-lg group-hover:scale-110 transition-transform">📜</span>
+            <span class="text-[9px] font-bold uppercase tracking-wider mt-0.5">History</span>
+        </a>
+        <a href="referral.html" class="flex flex-col items-center justify-center py-1.5 px-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group">
+            <span class="text-lg group-hover:scale-110 transition-transform">🎁</span>
+            <span class="text-[9px] font-bold uppercase tracking-wider mt-0.5">Refer</span>
+        </a>
+        <a href="support.html" class="flex flex-col items-center justify-center py-1.5 px-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group">
+            <span class="text-lg group-hover:scale-110 transition-transform">🎧</span>
+            <span class="text-[9px] font-bold uppercase tracking-wider mt-0.5">Support</span>
+        </a>
+        <a href="profile.html" class="flex flex-col items-center justify-center py-1.5 px-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group">
+            <span class="text-lg group-hover:scale-110 transition-transform">👤</span>
+            <span class="text-[9px] font-bold uppercase tracking-wider mt-0.5">Profile</span>
+        </a>
+    </nav>
+
+</body>
+</html>
+
+</html>

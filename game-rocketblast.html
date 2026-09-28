@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusWin - VIP Rocket Blast 100x</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #030712; color: #fff; user-select: none; }
+        .vip-panel { background: linear-gradient(135deg, #111827 0%, #030712 100%); border: 1px solid rgba(245, 158, 11, 0.2); box-shadow: 0 0 25px rgba(245, 158, 11, 0.05); }
+        @keyframes rocketVibrate {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(-1.5px, 1.5px) rotate(-1deg); }
+            50% { transform: translate(1.5px, -1.5px) rotate(1deg); }
+            75% { transform: translate(-1.5px, -1.5px) rotate(0deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        .blasting-rocket { animation: rocketVibrate 0.12s infinite; }
+
+        #tutorial-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(3, 7, 18, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        #tutorial-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        @keyframes vipSlideDown {
+            0% { transform: translateY(-120%) scale(0.9); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        @keyframes vipSlideUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-120%) scale(0.9); opacity: 0; }
+        }
+        .vip-toast-enter { animation: vipSlideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .vip-toast-exit { animation: vipSlideUp 0.3s ease-in forwards; }
+    </style>
+</head>
+<body class="min-h-screen pb-28">
+
+    <div id="tutorial-modal" class="show">
+        <div class="vip-panel rounded-3xl p-6 max-w-xs w-full text-center space-y-4 shadow-2xl border border-amber-500/50">
+            <div class="w-14 h-14 mx-auto bg-amber-500/20 rounded-2xl flex items-center justify-center text-3xl border border-amber-500/30 animate-bounce">🚀</div>
+            <h3 class="text-sm font-black text-amber-400 uppercase tracking-widest">Rocket Blast Guide</h3>
+            <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                Bet amount lagakar <span class="text-amber-400 font-bold">INITIATE LAUNCH</span> karein. Blast hone se pehle <span class="text-emerald-400 font-bold">CASH OUT</span> dabakar profit secure karein!
+            </p>
+            <button onclick="closeTutorial()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/30 transition-all">START PLAYING!</button>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="fixed top-5 left-0 right-0 z-[9999] flex justify-center pointer-events-none px-4"></div>
+
+    <header class="sticky top-0 z-50 bg-[#030712]/95 backdrop-blur-md border-b border-amber-500/20 px-4 py-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <button onclick="window.location.href='dashboard.html'" class="w-9 h-9 rounded-xl bg-slate-800/80 flex items-center justify-center font-bold text-white hover:bg-slate-700">←</button>
+            <div>
+               <h2 class="text-xs font-black text-amber-400 uppercase tracking-wider">🌟 VIP ROCKET BLAST 100X</h2>
+               <span class="text-[10px] text-amber-500/80 font-semibold">● Executive Orbital Command</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-900/90 border border-amber-500/30 px-3.5 py-1.5 rounded-full shadow-inner">
+            <span class="text-[10px] uppercase font-bold text-slate-400">Bal:</span>
+            <span id="userBalance" class="text-xs font-black text-emerald-400">₹0.00</span>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto p-4 space-y-4">
+        <div class="vip-panel rounded-3xl p-5 text-center relative overflow-hidden shadow-2xl space-y-2 h-72 flex flex-col justify-between">
+            <div class="flex justify-between items-center z-10">
+                <div id="rocketStatus" class="text-[10px] font-extrabold text-amber-400 uppercase tracking-widest">VIP Terminal Ready</div>
+                <div id="subMessage" class="text-[10px] font-bold text-slate-400">Max Multiplier: 100.00x</div>
+            </div>
+
+            <div class="relative w-full h-40 flex items-center justify-center bg-black/40 rounded-2xl border border-amber-500/10 overflow-hidden">
+                <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                <div id="verticalBeam" class="absolute bottom-0 w-1.5 bg-gradient-to-t from-amber-500 via-orange-500 to-rose-500 rounded-full transition-all duration-75" style="height: 0%;"></div>
+
+                <div id="rocketIcon" class="absolute z-20 transition-all duration-75 hidden blasting-rocket" style="bottom: 10px;">
+                    <svg width="50" height="70" viewBox="0 0 90 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M35 95 L45 120 L55 95 Z" fill="#ef4444"/>
+                        <path d="M40 95 L45 110 L50 95 Z" fill="#fde047"/>
+                        <path d="M45 5 C25 25, 25 70, 32 95 L58 95 C65 70, 65 25, 45 5 Z" fill="#f8fafc"/>
+                        <path d="M32 95 L58 95 L55 100 L35 100 Z" fill="#f59e0b"/>
+                        <path d="M45 5 C38 15, 38 22, 45 25 C52 22, 52 15, 45 5 Z" fill="#f59e0b"/>
+                        <circle cx="45" cy="40" r="5" fill="#0284c7"/>
+                        <circle cx="45" cy="55" r="5" fill="#0284c7"/>
+                        <path d="M32 75 L12 100 L32 95 Z" fill="#f59e0b"/>
+                        <path d="M58 75 L78 100 L58 95 Z" fill="#f59e0b"/>
+                    </svg>
+                </div>
+
+                <div class="absolute z-10 text-center">
+                    <div id="multiplierDisplay" class="text-5xl font-black text-white tracking-widest drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]">1.00x</div>
+                </div>
+            </div>
+            <div class="text-[10px] text-amber-500/80 font-semibold z-10">Secure profits before orbital explosion!</div>
+        </div>
+
+        <div class="vip-panel rounded-3xl p-4 space-y-3">
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-bold text-slate-300 uppercase">VIP Bet Amount (₹)</span>
+            </div>
+            
+            <input type="number" id="betAmount" value="10" class="w-full bg-[#030712] border border-amber-500/30 rounded-2xl px-4 py-3 text-xs text-white font-bold focus:outline-none focus:border-amber-500 disabled:opacity-50">
+
+            <div class="space-y-1.5">
+                <div class="grid grid-cols-6 gap-1">
+                    <button type="button" onclick="setBet(10)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-amber-400 border border-slate-700/50">10</button>
+                    <button type="button" onclick="setBet(20)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-amber-400 border border-slate-700/50">20</button>
+                    <button type="button" onclick="setBet(30)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-amber-400 border border-slate-700/50">30</button>
+                    <button type="button" onclick="setBet(40)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-amber-400 border border-slate-700/50">40</button>
+                    <button type="button" onclick="setBet(50)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-amber-400 border border-slate-700/50">50</button>
+                    <button type="button" onclick="setBet(100)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-amber-400 border border-slate-700/50">100</button>
+                </div>
+                <div class="grid grid-cols-5 gap-1">
+                    <button type="button" onclick="setBet(200)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-amber-400 border border-slate-700/50">200</button>
+                    <button type="button" onclick="setBet(400)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-amber-400 border border-slate-700/50">400</button>
+                    <button type="button" onclick="setBet(600)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-amber-400 border border-slate-700/50">600</button>
+                    <button type="button" onclick="setBet(800)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-amber-400 border border-slate-700/50">800</button>
+                    <button type="button" onclick="setBet(1000)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-amber-400 border border-slate-700/50">1000</button>
+                </div>
+            </div>
+
+            <button id="actionBtn" onclick="handleRocketAction()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/30 transition-all">INITIATE LAUNCH</button>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4d_UnCWkmKc3D65HjxvAGvJ4A5GXFIQQ",
+            authDomain: "nexuswin-aa829.firebaseapp.com",
+            databaseURL: "https://nexuswin-aa829-default-rtdb.firebaseio.com",
+            projectId: "nexuswin-aa829",
+            storageBucket: "nexuswin-aa829.firebasestorage.app",
+            messagingSenderId: "865579357605",
+            appId: "1:865579357605:web:7af15e869ce54756a8844c",
+            measurementId: "G-NTZY5VKYP0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let currentUser = null;
+        let userBalance = 0;
+        let rocketState = "IDLE";
+        let currentMultiplier = 1.00;
+        let crashPoint = 1.00;
+        let rocketInterval = null;
+        let activeBet = 0;
+        let timeElapsed = 0;
+
+        let audioCtx = null;
+        let osc1 = null;
+        let osc2 = null;
+        let masterGain = null;
+
+        window.closeTutorial = function() {
+            document.getElementById('tutorial-modal').classList.remove('show');
+        }
+
+        function showVipToast(title, message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            container.innerHTML = '';
+            
+            const toast = document.createElement('div');
+            let bgGradient = 'linear-gradient(135deg, #0f172aee 0%, #030712ee 100%)';
+            let borderColor = '#f59e0b';
+            let icon = '🚀';
+            let titleColor = 'text-white';
+
+            if(type === 'success') {
+                bgGradient = 'linear-gradient(135deg, #064e3b 0%, #022c22 100%)';
+                borderColor = '#10b981';
+                icon = '🏆';
+                titleColor = 'text-emerald-400';
+            } else if(type === 'error') {
+                bgGradient = 'linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)';
+                borderColor = '#f43f5e';
+                icon = '🚨';
+                titleColor = 'text-rose-400';
+            }
+
+            toast.className = `pointer-events-auto flex items-center gap-4 px-5 py-4 rounded-3xl shadow-2xl backdrop-blur-2xl border-2 vip-toast-enter max-w-sm w-full mx-4`;
+            toast.style.background = bgGradient;
+            toast.style.borderColor = borderColor;
+            toast.style.boxShadow = `0 20px 40px rgba(0,0,0,0.6), 0 0 20px ${borderColor}44`;
+            
+            toast.innerHTML = `
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl bg-black/30 border border-white/10 shrink-0 shadow-inner">
+                    ${icon}
+                </div>
+                <div class="flex-1">
+                    <div class="text-[13px] font-black uppercase tracking-wider ${titleColor}">${title}</div>
+                    <div class="text-xs font-semibold text-slate-200 mt-0.5">${message}</div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('vip-toast-enter');
+                toast.classList.add('vip-toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function startVipMusic() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                osc1 = audioCtx.createOscillator();
+                osc2 = audioCtx.createOscillator();
+                masterGain = audioCtx.createGain();
+
+                osc1.type = 'sawtooth';
+                osc1.frequency.setValueAtTime(130.81, audioCtx.currentTime);
+
+                osc2.type = 'triangle';
+                osc2.frequency.setValueAtTime(196.00, audioCtx.currentTime);
+
+                masterGain.gain.setValueAtTime(0.025, audioCtx.currentTime);
+
+                osc1.connect(masterGain);
+                osc2.connect(masterGain);
+                masterGain.connect(audioCtx.destination);
+
+                osc1.start();
+                osc2.start();
+            } catch(e) {}
+        }
+
+        function stopVipMusic() {
+            try {
+                if (osc1) { osc1.stop(); osc1.disconnect(); osc1 = null; }
+                if (osc2) { osc2.stop(); osc2.disconnect(); osc2 = null; }
+                if (masterGain) { masterGain.disconnect(); masterGain = null; }
+            } catch(e) {}
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                onValue(ref(db, 'users/' + user.uid), (snap) => {
+                    if(snap.exists() && snap.val().balance !== undefined) {
+                        userBalance = snap.val().balance;
+                        document.getElementById('userBalance').innerText = `₹${userBalance.toFixed(2)}`;
+                    }
+                });
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        window.setBet = (amt) => { 
+            if(rocketState === "LAUNCHED") return;
+            document.getElementById('betAmount').value = amt; 
+        }
+
+        function toggleControls(disable) {
+            const input = document.getElementById('betAmount');
+            input.disabled = disable;
+            
+            const quickBtns = document.querySelectorAll('.quick-btn');
+            quickBtns.forEach(btn => {
+                btn.disabled = disable;
+            });
+
+            if(disable) {
+                input.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                input.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function updateRocketAscent(mult) {
+            timeElapsed += 1;
+            let heightPercent = Math.min(90, timeElapsed * 4.5);
+            
+            let beam = document.getElementById('verticalBeam');
+            let rocket = document.getElementById('rocketIcon');
+
+            beam.style.height = `${heightPercent}%`;
+            rocket.style.bottom = `${heightPercent}%`;
+            rocket.style.display = "block";
+        }
+
+        window.handleRocketAction = async function() {
+            if(rocketState === "IDLE") {
+                activeBet = parseFloat(document.getElementById('betAmount').value);
+                if(!activeBet || activeBet < 10) {
+                    showVipToast("Invalid Wager", "Minimum bet amount is ₹10", "error");
+                    return;
+                }
+                if(activeBet > userBalance) {
+                    showVipToast("Low Balance", "Insufficient wallet balance!", "error");
+                    return;
+                }
+
+                userBalance -= activeBet;
+                await update(ref(db, `users/${currentUser.uid}`), { balance: userBalance });
+
+                rocketState = "LAUNCHED";
+                toggleControls(true);
+                currentMultiplier = 1.00;
+                timeElapsed = 0;
+
+                document.getElementById('verticalBeam').style.height = "0%";
+                document.getElementById('verticalBeam').style.background = "linear-gradient(to top, #f59e0b, #f97316, #ef4444)";
+
+                startVipMusic();
+
+                // --- ADMIN FAVORABLE HOUSE EDGE ALGORITHM (MODIFIED) ---
+                let r = Math.random();
+                if(r < 0.65) {
+                    // 65% chance: Rocket crashes instantly or very early (1.00x to 1.15x) -> Admin Wins
+                    crashPoint = 1.00 + (Math.random() * 0.15);
+                } else if(r < 0.90) {
+                    // 25% chance: Moderate multiplier (1.16x to 1.80x) -> Small wins
+                    crashPoint = 1.16 + (Math.random() * 0.64);
+                } else if(r < 0.98) {
+                    // 8% chance: Decent multiplier (1.81x to 3.50x)
+                    crashPoint = 1.81 + (Math.random() * 1.69);
+                } else {
+                    // Rare 2% chance: High multiplier (3.50x to 8.00x max) - capped heavily against huge payouts
+                    crashPoint = 3.50 + (Math.random() * 4.50);
+                }
+
+                document.getElementById('actionBtn').innerText = "CASH OUT";
+                document.getElementById('actionBtn').className = "w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/30 transition-all";
+                document.getElementById('rocketStatus').innerText = "ORBITAL ASCENT ACTIVE";
+                document.getElementById('subMessage').innerText = "Secure your profits now!";
+
+                // Multiplier tick interval (Slowed down growth rate so users panic and cash out early or crash fast)
+                rocketInterval = setInterval(() => {
+                    currentMultiplier += 0.01 + (currentMultiplier * 0.015);
+
+                    if(currentMultiplier >= crashPoint) {
+                        clearInterval(rocketInterval);
+                        stopVipMusic();
+                        rocketState = "BLASTED";
+                        currentMultiplier = crashPoint;
+                        
+                        document.getElementById('multiplierDisplay').innerText = `${currentMultiplier.toFixed(2)}x`;
+                        document.getElementById('multiplierDisplay').className = "text-5xl font-black text-rose-500 tracking-widest drop-shadow-[0_0_15px_rgba(244,63,94,0.5)]";
+                        document.getElementById('rocketStatus').innerText = "ORBITAL EXPLOSION!";
+                        document.getElementById('subMessage').innerText = `Lost ₹${activeBet.toFixed(2)}`;
+                        document.getElementById('verticalBeam').style.background = "#ef4444";
+                        document.getElementById('rocketIcon').style.display = "none";
+
+                        showVipToast("Rocket Blasted", `Lost ₹${activeBet.toFixed(2)} this launch`, "error");
+
+                        document.getElementById('actionBtn').innerText = "INITIATE LAUNCH";
+                        document.getElementById('actionBtn').className = "w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/30 transition-all";
+                        
+                        rocketState = "IDLE";
+                        toggleControls(false);
+                    } else {
+                        document.getElementById('multiplierDisplay').innerText = `${currentMultiplier.toFixed(2)}x`;
+                        updateRocketAscent(currentMultiplier);
+                    }
+                }, 120); // Interval speed slow kiya gaya hai (90ms se 120ms) taaki amount aaram se aur control mein badhe
+
+            } else if(rocketState === "LAUNCHED") {
+                clearInterval(rocketInterval);
+                stopVipMusic();
+                rocketState = "CASHED_OUT";
+                let winAmt = activeBet * currentMultiplier;
+                userBalance += winAmt;
+                await update(ref(db, `users/${currentUser.uid}`), { balance: userBalance });
+
+                document.getElementById('multiplierDisplay').className = "text-5xl font-black text-emerald-400 tracking-widest drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]";
+                document.getElementById('rocketStatus').innerText = "VIP CASH OUT SUCCESS!";
+                document.getElementById('subMessage').innerText = `Won ₹${winAmt.toFixed(2)}`;
+                document.getElementById('rocketIcon').style.display = "none";
+
+                showVipToast("Cash Out Success!", `Won ₹${winAmt.toFixed(2)} (${currentMultiplier.toFixed(2)}x)`, "success");
+
+                document.getElementById('actionBtn').innerText = "INITIATE LAUNCH";
+                document.getElementById('actionBtn').className = "w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/30 transition-all";
+                
+                rocketState = "IDLE";
+                toggleControls(false);
+            }
+        }
+    </script>
+</body>
+</html>

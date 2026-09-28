@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusWin - 99 Club VIP Limbo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #05070a; color: #fff; user-select: none; }
+        .glass-panel { background: linear-gradient(135deg, #0f172a 0%, #090d16 100%); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .limbo-screen {
+            background: radial-gradient(circle, #1e293b 0%, #090d16 100%);
+            border: 4px solid #b45309;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.8), 0 10px 25px rgba(0,0,0,0.6);
+        }
+
+        /* --- TUTORIAL POPUP MODAL --- */
+        #tutorial-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 7, 10, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        #tutorial-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* --- HIGH-END ULTRA VIP NOTIFICATION MODAL --- */
+        #vip-toast-container {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: #090e1a;
+            color: #ffffff;
+            padding: 16px 20px;
+            border-radius: 18px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 0, 0, 0.7);
+            border: 2px solid #1e293b;
+            font-family: 'Outfit', sans-serif;
+            z-index: 99999;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 90%;
+            max-width: 340px;
+        }
+
+        #vip-toast-container.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        #vip-toast-container.success {
+            background: linear-gradient(135deg, #451a03 0%, #1a0801 100%);
+            border-color: #f59e0b;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(245, 158, 11, 0.35);
+        }
+
+        #vip-toast-container.error {
+            background: linear-gradient(135deg, #7f1d1d 0%, #2a0808 100%);
+            border-color: #ef4444;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(239, 68, 68, 0.35);
+        }
+
+        #vip-toast-icon-box {
+            font-size: 22px;
+            background: rgba(0, 0, 0, 0.4);
+            min-width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+
+        #vip-toast-content {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        #vip-toast-heading {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #94a3b8;
+            font-weight: 800;
+        }
+
+        #vip-toast-message {
+            font-size: 14px;
+            font-weight: 900;
+            color: #ffffff;
+            margin-top: 1px;
+        }
+
+        input:disabled, button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        input:disabled {
+            background-color: #030406 !important;
+            color: #475569 !important;
+            border-color: #1e293b !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-28">
+
+    <!-- Tutorial Guide Modal on Entry -->
+    <div id="tutorial-modal" class="show">
+        <div class="glass-panel rounded-3xl p-6 max-w-xs w-full text-center space-y-4 shadow-2xl border border-amber-500/50">
+            <div class="w-14 h-14 mx-auto bg-amber-500/20 rounded-2xl flex items-center justify-center text-3xl border border-amber-500/30 animate-bounce">🚀</div>
+            <h3 class="text-sm font-black text-amber-400 uppercase tracking-widest">How to Play VIP Limbo</h3>
+            <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                Apna <span class="text-amber-400 font-bold">Target Multiplier</span> set karein aur Bet amount enter karein. Agar result target se zyada ya barabar aaya, toh aap jeet jayenge!
+            </p>
+            <button onclick="closeTutorial()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/30 transition-all">GOT IT, LET'S PLAY!</button>
+        </div>
+    </div>
+
+    <!-- Ultra-VIP Professional Notification Modal -->
+    <div id="vip-toast-container">
+        <div id="vip-toast-icon-box">⚡</div>
+        <div id="vip-toast-content">
+            <span id="vip-toast-heading">NexusWin VIP</span>
+            <span id="vip-toast-message">Notification message</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-[#090d16]/95 backdrop-blur-md border-b border-slate-800/80 px-4 py-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <button onclick="window.location.href='dashboard.html'" class="w-9 h-9 rounded-xl bg-slate-800/80 flex items-center justify-center font-bold text-white hover:bg-slate-700">←</button>
+            <div>
+               <h2 class="text-xs font-black text-amber-400 uppercase tracking-wider">🚀 99 Club VIP Limbo</h2>
+               <span class="text-[10px] text-emerald-400 font-semibold">● Target Multiplier </span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3.5 py-1.5 rounded-full shadow-inner">
+            <span class="text-[10px] uppercase font-bold text-slate-400">Bal:</span>
+            <span id="userBalance" class="text-xs font-black text-emerald-400">₹0.00</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-md mx-auto p-4 space-y-4">
+
+        <!-- Game Arena -->
+        <div class="glass-panel rounded-3xl p-4 text-center relative overflow-hidden shadow-2xl space-y-4">
+            
+            <div id="gameStatus" class="text-xs font-extrabold text-amber-300 uppercase tracking-wider bg-slate-950/80 py-2.5 px-3 rounded-2xl border border-slate-800">
+                Set your target and launch rocket!
+            </div>
+
+            <!-- Limbo Screen Display -->
+            <div class="limbo-screen rounded-3xl p-8 flex flex-col justify-center items-center gap-2 min-h-[180px]">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Result Multiplier</span>
+                <div id="multiplierDisplay" class="text-4xl font-black text-amber-400 tracking-wider">1.00x</div>
+            </div>
+
+            <!-- Target Multiplier Input -->
+            <div class="space-y-1.5 text-left px-1">
+                <div class="flex justify-between items-center text-xs font-bold text-slate-300">
+                    <span class="uppercase">Target Multiplier</span>
+                    <span class="text-[10px] text-amber-400">Max Win Chance</span>
+                </div>
+                <div class="flex gap-2">
+                    <input type="number" id="targetMultiplier" value="2.00" step="0.1" min="1.01" class="w-full bg-[#05070a] border border-slate-800 rounded-2xl px-4 py-3 text-xs text-white font-bold focus:outline-none focus:border-amber-500">
+                    <div class="flex gap-1">
+                        <button type="button" onclick="setTarget(1.5)" class="target-btn px-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300">1.5x</button>
+                        <button type="button" onclick="setTarget(2.0)" class="target-btn px-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300">2.0x</button>
+                        <button type="button" onclick="setTarget(5.0)" class="target-btn px-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-300">5.0x</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Betting Controls Panel -->
+        <div class="glass-panel rounded-3xl p-4 space-y-3">
+            <div class="space-y-2">
+                <span class="text-xs font-bold text-slate-300 uppercase block">Bet Amount (₹)</span>
+                <!-- Row 1 Quick Bet Buttons -->
+                <div class="grid grid-cols-6 gap-1">
+                    <button type="button" onclick="setBet(10)" class="bet-quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300">10</button>
+                    <button type="button" onclick="setBet(20)" class="bet-quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300">20</button>
+                    <button type="button" onclick="setBet(30)" class="bet-quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300">30</button>
+                    <button type="button" onclick="setBet(40)" class="bet-quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300">40</button>
+                    <button type="button" onclick="setBet(50)" class="bet-quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300">50</button>
+                    <button type="button" onclick="setBet(100)" class="bet-quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300">100</button>
+                </div>
+                <!-- Row 2 Quick Bet Buttons -->
+                <div class="grid grid-cols-5 gap-1">
+                    <button type="button" onclick="setBet(200)" class="bet-quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300">200</button>
+                    <button type="button" onclick="setBet(400)" class="bet-quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300">400</button>
+                    <button type="button" onclick="setBet(600)" class="bet-quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300">600</button>
+                    <button type="button" onclick="setBet(800)" class="bet-quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300">800</button>
+                    <button type="button" onclick="setBet(1000)" class="bet-quick-btn py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300">1000</button>
+                </div>
+            </div>
+
+            <input type="number" id="betAmount" value="10" class="w-full bg-[#05070a] border border-slate-800 rounded-2xl px-4 py-3 text-xs text-white font-bold focus:outline-none focus:border-amber-500">
+
+            <button id="launchBtn" onclick="playLimbo()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/30 transition-all">LAUNCH ROCKET</button>
+        </div>
+    </main>
+
+    <!-- Firebase & Game Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4d_UnCWkmKc3D65HjxvAGvJ4A5GXFIQQ",
+            authDomain: "nexuswin-aa829.firebaseapp.com",
+            databaseURL: "https://nexuswin-aa829-default-rtdb.firebaseio.com",
+            projectId: "nexuswin-aa829",
+            storageBucket: "nexuswin-aa829.firebasestorage.app",
+            messagingSenderId: "865579357605",
+            appId: "1:865579357605:web:7af15e869ce54756a8844c",
+            measurementId: "G-NTZY5VKYP0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let currentUser = null;
+        let userBalance = 0;
+        let isPlaying = false;
+
+        window.closeTutorial = function() {
+            document.getElementById('tutorial-modal').classList.remove('show');
+        }
+
+        function showVIPToast(message, type = 'error') {
+            const container = document.getElementById('vip-toast-container');
+            const iconBox = document.getElementById('vip-toast-icon-box');
+            const msgEl = document.getElementById('vip-toast-message');
+            const headingEl = document.getElementById('vip-toast-heading');
+
+            container.className = '';
+            container.classList.add(type);
+
+            if(type === 'success') {
+                iconBox.innerText = '🏆';
+                headingEl.innerText = 'NexusWin • Victory';
+            } else {
+                iconBox.innerText = '🚨';
+                headingEl.innerText = 'NexusWin • Warning';
+            }
+
+            msgEl.innerText = message;
+            
+            setTimeout(() => container.classList.add('show'), 10);
+            setTimeout(() => {
+                container.classList.remove('show');
+            }, 3000);
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                onValue(ref(db, 'users/' + user.uid), (snap) => {
+                    if(snap.exists() && snap.val().balance !== undefined) {
+                        userBalance = snap.val().balance;
+                        document.getElementById('userBalance').innerText = `₹${userBalance.toFixed(2)}`;
+                    }
+                });
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        window.setBet = (amt) => { 
+            if(!isPlaying) document.getElementById('betAmount').value = amt; 
+        }
+        window.setTarget = (target) => { 
+            if(!isPlaying) document.getElementById('targetMultiplier').value = target; 
+        }
+
+        window.playLimbo = async function() {
+            if(isPlaying) return;
+            let bet = parseFloat(document.getElementById('betAmount').value);
+            let targetMult = parseFloat(document.getElementById('targetMultiplier').value);
+
+            if(!bet || bet < 10) { 
+                showVIPToast("Minimum bet amount is ₹10!", "error"); 
+                return; 
+            }
+            if(!targetMult || targetMult < 1.01) { 
+                showVIPToast("Minimum target multiplier is 1.01x!", "error"); 
+                return; 
+            }
+            if(bet > userBalance) { 
+                showVIPToast("Insufficient Balance! Please recharge.", "error"); 
+                return; 
+            }
+
+            isPlaying = true;
+            document.getElementById('launchBtn').disabled = true;
+            document.getElementById('betAmount').disabled = true;
+            document.getElementById('targetMultiplier').disabled = true;
+            document.querySelectorAll('.bet-quick-btn, .target-btn').forEach(b => b.disabled = true);
+
+            document.getElementById('gameStatus').innerHTML = `<span class="text-amber-400 animate-pulse font-extrabold">🚀 Rocket launching...</span>`;
+
+            userBalance -= bet;
+            await update(ref(db, `users/${currentUser.uid}`), { balance: userBalance });
+
+            let roll = Math.random();
+            let userWins = roll < 0.25;
+
+            let finalResultMultiplier;
+            if (userWins) {
+                finalResultMultiplier = targetMult + (Math.random() * 0.8);
+            } else {
+                finalResultMultiplier = Math.max(1.00, targetMult - (0.2 + Math.random() * (targetMult * 0.5)));
+            }
+
+            let currentAnimVal = 1.00;
+            let interval = setInterval(() => {
+                currentAnimVal += (finalResultMultiplier - currentAnimVal) * 0.2;
+                document.getElementById('multiplierDisplay').innerText = `${currentAnimVal.toFixed(2)}x`;
+            }, 80);
+
+            setTimeout(async () => {
+                clearInterval(interval);
+                document.getElementById('multiplierDisplay').innerText = `${finalResultMultiplier.toFixed(2)}x`;
+
+                if (userWins && finalResultMultiplier >= targetMult) {
+                    let winAmt = bet * targetMult;
+                    userBalance += winAmt;
+                    await update(ref(db, `users/${currentUser.uid}`), { balance: userBalance });
+                    document.getElementById('gameStatus').innerHTML = `<span class="text-emerald-400 font-extrabold">🎉 SUCCESS! Hit ${targetMult}x | WON ₹${winAmt.toFixed(2)}</span>`;
+                    showVIPToast(`Won ₹${winAmt.toFixed(2)} (${targetMult}x Target)!`, "success");
+                } else {
+                    document.getElementById('gameStatus').innerHTML = `<span class="text-rose-400 font-extrabold">💥 CRASHED! Target missed</span>`;
+                    showVIPToast(`Rocket Crashed! Lost ₹${bet}.`, "error");
+                }
+
+                isPlaying = false;
+                document.getElementById('launchBtn').disabled = false;
+                document.getElementById('betAmount').disabled = false;
+                document.getElementById('targetMultiplier').disabled = false;
+                document.querySelectorAll('.bet-quick-btn, .target-btn').forEach(b => b.disabled = false);
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusWin - Tower Box Stack</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #030712; color: #fff; user-select: none; overflow-x: hidden; }
+        .cyber-panel { background: linear-gradient(135deg, #090d16 0%, #030712 100%); border: 1px solid rgba(168, 85, 247, 0.3); box-shadow: 0 0 30px rgba(168, 85, 247, 0.08); }
+        #gameCanvas { background: #020617; border-radius: 1rem; border: 1px solid rgba(168, 85, 247, 0.2); display: block; margin: 0 auto; }
+        
+        /* --- TUTORIAL POPUP MODAL --- */
+        #tutorial-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(3, 7, 18, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        #tutorial-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        @keyframes vipSlideDown {
+            0% { transform: translateY(-120%) scale(0.9); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        @keyframes vipSlideUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-120%) scale(0.9); opacity: 0; }
+        }
+        .vip-toast-enter { animation: vipSlideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .vip-toast-exit { animation: vipSlideUp 0.3s ease-in forwards; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between pb-6">
+
+    <!-- Tutorial Guide Modal on Entry -->
+    <div id="tutorial-modal" class="show">
+        <div class="cyber-panel rounded-3xl p-6 max-w-xs w-full text-center space-y-4 shadow-2xl border border-purple-500/50">
+            <div class="w-14 h-14 mx-auto bg-purple-500/20 rounded-2xl flex items-center justify-center text-3xl border border-purple-500/30 animate-bounce">📦</div>
+            <h3 class="text-sm font-black text-purple-400 uppercase tracking-widest">How to Play Tower Stack</h3>
+            <p class="text-xs text-slate-300 font-medium leading-relaxed">
+                Bet amount select karein aur <span class="text-purple-400 font-bold">Start Stacking</span> dabayein. Jhulate hue box ko bilkul sahi timing par <span class="text-emerald-400 font-bold">Drop Box</span> button se drop karein taaki tower balance rahe aur bada win mile!
+            </p>
+            <button onclick="closeTutorial()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-purple-500/30 transition-all">GOT IT, LET'S STACK!</button>
+        </div>
+    </div>
+
+    <!-- VIP Toast Container -->
+    <div id="toastContainer" class="fixed top-5 left-0 right-0 z-[9999] flex justify-center pointer-events-none px-4"></div>
+
+    <!-- Header -->
+    <header class="bg-[#030712]/95 backdrop-blur-md border-b border-purple-500/20 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <button onclick="window.location.href='dashboard.html'" class="w-9 h-9 rounded-xl bg-slate-800/80 flex items-center justify-center font-bold text-white hover:bg-slate-700">←</button>
+            <div class="flex items-center gap-2">
+               <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-purple-500 to-indigo-600 flex items-center justify-center text-xs shadow-md shadow-purple-500/30">📦</div>
+               <div>
+                   <h2 class="text-xs font-black text-purple-400 uppercase tracking-wider">Tower Box Stack</h2>
+                   <span class="text-[10px] text-indigo-300 font-semibold">● Strict Overhang Physics</span>
+               </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-900/90 border border-purple-500/30 px-3.5 py-1.5 rounded-full shadow-inner">
+            <span class="text-[10px] uppercase font-bold text-slate-400">Bal:</span>
+            <span id="userBalance" class="text-xs font-black text-emerald-400">₹0.00</span>
+        </div>
+    </header>
+
+    <!-- Main Game Area -->
+    <main class="max-w-md mx-auto w-full p-4 flex flex-col space-y-3">
+        <div class="cyber-panel rounded-3xl p-3 text-center space-y-2">
+            <div class="flex justify-between items-center px-2">
+                <div id="gameStatus" class="text-[10px] font-extrabold text-purple-400 uppercase tracking-widest">READY TO START STACKING</div>
+                <div id="multiplierDisplay" class="text-xs font-black text-emerald-400">1.00x</div>
+            </div>
+
+            <!-- Canvas for Tower Game -->
+            <div class="relative flex justify-center">
+                <canvas id="gameCanvas" width="340" height="320"></canvas>
+            </div>
+
+            <div class="flex justify-between items-center text-[10px] text-slate-400 px-2 font-bold">
+                <span class="text-purple-300">Height Score: <span id="stackCount">0</span> Boxes</span>
+                <span id="potentialWin" class="text-indigo-300">Win: ₹0.00</span>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="cyber-panel rounded-3xl p-4 space-y-3">
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-bold text-slate-300 uppercase">Bet Amount (₹)</span>
+            </div>
+            
+            <!-- Default Bet ₹10 -->
+            <input type="number" id="betAmount" value="10" class="w-full bg-[#030712] border border-purple-500/30 rounded-2xl px-4 py-3 text-xs text-white font-bold focus:outline-none focus:border-purple-500">
+
+            <!-- Quick Bets Layout (Two Rows Standardized) -->
+            <div class="space-y-1.5">
+                <div class="grid grid-cols-6 gap-1">
+                    <button type="button" onclick="setBet(10)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">10</button>
+                    <button type="button" onclick="setBet(20)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">20</button>
+                    <button type="button" onclick="setBet(30)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">30</button>
+                    <button type="button" onclick="setBet(40)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">40</button>
+                    <button type="button" onclick="setBet(50)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">50</button>
+                    <button type="button" onclick="setBet(100)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">100</button>
+                </div>
+                <div class="grid grid-cols-5 gap-1">
+                    <button type="button" onclick="setBet(200)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">200</button>
+                    <button type="button" onclick="setBet(400)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">400</button>
+                    <button type="button" onclick="setBet(600)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">600</button>
+                    <button type="button" onclick="setBet(800)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">800</button>
+                    <button type="button" onclick="setBet(1000)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300 border border-slate-700/50">1000</button>
+                </div>
+            </div>
+
+            <button id="startBtn" onclick="startGame()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-purple-500/30 transition-all">START STACKING 🚀</button>
+            <button id="dropBtn" onclick="dropBox()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/30 transition-all hidden">DROP BOX 📦</button>
+        </div>
+    </main>
+
+    <!-- Firebase & Game Engine -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4d_UnCWkmKc3D65HjxvAGvJ4A5GXFIQQ",
+            authDomain: "nexuswin-aa829.firebaseapp.com",
+            databaseURL: "https://nexuswin-aa829-default-rtdb.firebaseio.com",
+            projectId: "nexuswin-aa829",
+            storageBucket: "nexuswin-aa829.firebasestorage.app",
+            messagingSenderId: "865579357605",
+            appId: "1:865579357605:web:7af15e869ce54756a8844c",
+            measurementId: "G-NTZY5VKYP0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let currentUser = null;
+        let userBalance = 0;
+        let gameActive = false;
+        let activeBet = 10;
+
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let tower = []; 
+        let swingAngle = 0;
+        let swingSpeed = 0.038;
+        let fallingBox = null; 
+        let towerTilt = 0; 
+
+        window.closeTutorial = function() {
+            document.getElementById('tutorial-modal').classList.remove('show');
+        }
+
+        function showVipToast(title, message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            container.innerHTML = '';
+            
+            const toast = document.createElement('div');
+            let bgGradient = 'linear-gradient(135deg, #0f172aee 0%, #090d16ee 100%)';
+            let borderColor = '#a855f7';
+            let icon = '🚀';
+            let titleColor = 'text-white';
+
+            if(type === 'success') {
+                bgGradient = 'linear-gradient(135deg, #064e3b 0%, #022c22 100%)';
+                borderColor = '#10b981';
+                icon = '🏆';
+                titleColor = 'text-emerald-400';
+            } else if(type === 'error') {
+                bgGradient = 'linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)';
+                borderColor = '#f43f5e';
+                icon = '🚨';
+                titleColor = 'text-rose-400';
+            }
+
+            toast.className = `pointer-events-auto flex items-center gap-4 px-5 py-4 rounded-3xl shadow-2xl backdrop-blur-2xl border-2 vip-toast-enter max-w-sm w-full mx-4`;
+            toast.style.background = bgGradient;
+            toast.style.borderColor = borderColor;
+            toast.style.boxShadow = `0 20px 40px rgba(0,0,0,0.6), 0 0 20px ${borderColor}44`;
+            
+            toast.innerHTML = `
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl bg-black/30 border border-white/10 shrink-0 shadow-inner">
+                    ${icon}
+                </div>
+                <div class="flex-1">
+                    <div class="text-[13px] font-black uppercase tracking-wider ${titleColor}">${title}</div>
+                    <div class="text-xs font-semibold text-slate-200 mt-0.5">${message}</div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('vip-toast-enter');
+                toast.classList.add('vip-toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                onValue(ref(db, 'users/' + user.uid), (snap) => {
+                    if(snap.exists() && snap.val().balance !== undefined) {
+                        userBalance = snap.val().balance;
+                        document.getElementById('userBalance').innerText = `₹${userBalance.toFixed(2)}`;
+                    }
+                });
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        window.setBet = (amt) => { 
+            if(gameActive) return;
+            activeBet = amt;
+            document.getElementById('betAmount').value = amt; 
+        }
+
+        function toggleControls(disable) {
+            const input = document.getElementById('betAmount');
+            input.disabled = disable;
+            
+            const quickBtns = document.querySelectorAll('.quick-btn');
+            quickBtns.forEach(btn => {
+                btn.disabled = disable;
+            });
+        }
+
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            let centerX = canvas.width / 2;
+            let baseY = canvas.height - 40;
+
+            // Draw Base Pillar
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(centerX - 8, baseY, 16, 40);
+
+            // Draw Stacked Tower
+            ctx.save();
+            ctx.translate(centerX, baseY);
+            ctx.rotate(towerTilt);
+
+            let currentY = 0;
+            for(let i = 0; i < tower.length; i++) {
+                let box = tower[i];
+                currentY -= box.height;
+                ctx.fillStyle = i % 2 === 0 ? '#a855f7' : '#ec4899';
+                ctx.fillRect(box.xOffset - box.width / 2, currentY, box.width, box.height);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(box.xOffset - box.width / 2, currentY, box.width, box.height);
+            }
+            ctx.restore();
+
+            swingAngle += swingSpeed;
+            let ropeLength = 65;
+            let anchorX = centerX;
+            let anchorY = 25;
+            let boxX = anchorX + Math.sin(swingAngle) * 110;
+            let boxY = anchorY + ropeLength;
+
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(anchorX, anchorY);
+            ctx.lineTo(boxX, boxY);
+            ctx.stroke();
+
+            if (!fallingBox) {
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(boxX - 22, boxY, 44, 22);
+                ctx.strokeStyle = '#ffffff';
+                ctx.strokeRect(boxX - 22, boxY, 44, 22);
+            }
+
+            if (gameActive && fallingBox) {
+                fallingBox.y += fallingBox.vy;
+
+                if (fallingBox.isFallingDownwardsAfterMiss) {
+                    fallingBox.x += fallingBox.vx || 0;
+                    ctx.fillStyle = '#ef4444';
+                } else {
+                    ctx.fillStyle = '#38bdf8';
+                }
+
+                ctx.fillRect(fallingBox.x - 22, fallingBox.y, 44, 22);
+                ctx.strokeStyle = '#ffffff';
+                ctx.strokeRect(fallingBox.x - 22, fallingBox.y, 44, 22);
+
+                if (fallingBox.y > canvas.height + 50) {
+                    gameOver(false, "BOX FELL OFF! GAME OVER!");
+                    return;
+                }
+
+                if (!fallingBox.isFallingDownwardsAfterMiss) {
+                    let topTowerY = baseY - (tower.length * 22) - 22;
+
+                    if (fallingBox.y >= topTowerY) {
+                        let landedX = fallingBox.x;
+                        let xOffset = landedX - centerX;
+                        let boxWidth = 44;
+
+                        let isValid = true;
+
+                        if (tower.length === 0) {
+                            if (Math.abs(xOffset) > 18) {
+                                isValid = false;
+                            }
+                        } else {
+                            let prevBox = tower[tower.length - 1];
+                            let overlapLeft = Math.max(xOffset - boxWidth/2, prevBox.xOffset - prevBox.width/2);
+                            let overlapRight = Math.min(xOffset + boxWidth/2, prevBox.xOffset + prevBox.width/2);
+                            let overlapWidth = overlapRight - overlapLeft;
+
+                            if (overlapWidth < (boxWidth * 0.5)) {
+                                isValid = false;
+                            }
+                        }
+
+                        if (!isValid) {
+                            fallingBox.isFallingDownwardsAfterMiss = true;
+                            fallingBox.vy = 6;
+                            fallingBox.vx = xOffset > 0 ? 2 : -2;
+                            return;
+                        }
+
+                        tower.push({
+                            xOffset: xOffset,
+                            width: boxWidth,
+                            height: 22
+                        });
+
+                        let torque = (xOffset * tower.length) / 900;
+                        towerTilt += torque;
+
+                        fallingBox = null;
+
+                        let count = tower.length;
+                        document.getElementById('stackCount').innerText = count;
+                        let mult = 1.00 + (count * 0.40);
+                        document.getElementById('multiplierDisplay').innerText = `${mult.toFixed(2)}x`;
+                        let potentialWin = activeBet * mult;
+                        document.getElementById('potentialWin').innerText = `Win: ₹${potentialWin.toFixed(2)}`;
+
+                        if (Math.abs(towerTilt) > 0.35) {
+                            gameOver(false, "TOWER TOPPLED OVER!");
+                            return;
+                        }
+
+                        if (count >= 12) {
+                            gameOver(true, "MASTER BUILDER! EPIC WIN!");
+                        }
+                    }
+                }
+            }
+        }
+
+        setInterval(drawScene, 25);
+
+        window.startGame = async function() {
+            let bet = parseFloat(document.getElementById('betAmount').value);
+            if(!bet || bet < 10) {
+                showVipToast("Invalid Bet", "Minimum bet amount is ₹10", "error");
+                return;
+            }
+            if(bet > userBalance) {
+                showVipToast("Low Balance", "Insufficient wallet balance!", "error");
+                return;
+            }
+
+            activeBet = bet;
+            userBalance -= activeBet;
+            await update(ref(db, `users/${currentUser.uid}`), { balance: userBalance });
+
+            tower = [];
+            towerTilt = 0;
+            fallingBox = null;
+            gameActive = true;
+            toggleControls(true);
+
+            document.getElementById('startBtn').classList.add('hidden');
+            document.getElementById('dropBtn').classList.remove('hidden');
+            document.getElementById('gameStatus').innerText = "TIMING IS EVERYTHING. DROP!";
+            document.getElementById('multiplierDisplay').innerText = "1.00x";
+            document.getElementById('stackCount').innerText = "0";
+            document.getElementById('potentialWin').innerText = "Win: ₹0.00";
+        }
+
+        window.dropBox = function() {
+            if(!gameActive || fallingBox) return;
+            
+            let ropeLength = 65;
+            let anchorX = canvas.width / 2;
+            let boxX = anchorX + Math.sin(swingAngle) * 110;
+            let boxY = 25 + ropeLength;
+
+            fallingBox = {
+                x: boxX,
+                y: boxY,
+                vy: 9,
+                isFallingDownwardsAfterMiss: false
+            };
+        }
+
+        async function gameOver(isWin, message) {
+            gameActive = false;
+            fallingBox = null;
+            toggleControls(false);
+
+            document.getElementById('gameStatus').innerText = message;
+
+            if (isWin) {
+                let count = tower.length;
+                let mult = 1.00 + (count * 0.40);
+                let winAmt = activeBet * mult;
+                userBalance += winAmt;
+                await update(ref(db, `users/${currentUser.uid}`), { balance: userBalance });
+                document.getElementById('potentialWin').innerText = `Win: ₹${winAmt.toFixed(2)}`;
+                showVipToast("Epic Win!", `Won ₹${winAmt.toFixed(2)} at ${mult.toFixed(2)}x`, "success");
+            } else {
+                document.getElementById('potentialWin').innerText = `Win: ₹0.00`;
+                showVipToast("Game Over", message, "error");
+            }
+
+            document.getElementById('startBtn').classList.remove('hidden');
+            document.getElementById('dropBtn').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

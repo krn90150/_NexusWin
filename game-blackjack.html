@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusWin - Blackjack Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #07090d; color: #fff; }
+        .glass-card { background: linear-gradient(135deg, #121824 0%, #0d111a 100%); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .blackjack-table {
+            background: radial-gradient(circle, #064e3b 0%, #022c22 70%, #011c16 100%);
+            border: 6px solid #1e293b;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.8), 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .playing-card {
+            width: 52px;
+            height: 74px;
+            background: #ffffff;
+            color: #000;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 4px;
+            font-weight: 800;
+            font-size: 13px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .card-hidden {
+            background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
+            border: 2px solid #a78bfa;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        /* VIP & Modern Large Toast Animations */
+        @keyframes vipSlideDown {
+            0% { transform: translateY(-120%) scale(0.9); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        @keyframes vipSlideUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-120%) scale(0.9); opacity: 0; }
+        }
+        .vip-toast-enter { animation: vipSlideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .vip-toast-exit { animation: vipSlideUp 0.3s ease-in forwards; }
+    </style>
+</head>
+<body class="min-h-screen pb-28">
+
+    <!-- VIP Large Modern Toast Container (Top Center) -->
+    <div id="toastContainer" class="fixed top-5 left-0 right-0 z-[9999] flex justify-center pointer-events-none px-4"></div>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-[#0d111a]/95 backdrop-blur-md border-b border-slate-800/80 px-4 py-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <button onclick="window.location.href='dashboard.html'" class="w-9 h-9 rounded-xl bg-slate-800/80 flex items-center justify-center font-bold text-white hover:bg-slate-700">←</button>
+            <div>
+               <h2 class="text-xs font-black text-amber-400 uppercase tracking-wider">🃏 Blackjack Pro</h2>
+               <span class="text-[10px] text-emerald-400 font-semibold">● Admin Secured Mode</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3.5 py-1.5 rounded-full shadow-inner">
+            <span class="text-[10px] uppercase font-bold text-slate-400">Bal:</span>
+            <span id="userBalance" class="text-xs font-black text-emerald-400">₹0.00</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-md mx-auto p-4 space-y-4">
+
+        <!-- Game Arena -->
+        <div class="glass-card rounded-3xl p-4 text-center relative overflow-hidden shadow-2xl space-y-4">
+            
+            <div id="gameStatus" class="text-xs font-extrabold text-amber-400 uppercase tracking-wider bg-slate-900/80 py-2 px-3 rounded-xl border border-slate-800">
+                Place your bet and click Deal!
+            </div>
+
+            <!-- Table Felt -->
+            <div class="blackjack-table rounded-2xl p-4 space-y-4 relative min-h-[220px] flex flex-col justify-between">
+                
+                <!-- Dealer Area -->
+                <div class="flex flex-col items-center gap-1">
+                    <div class="flex justify-between w-full px-2 text-[10px] font-bold text-emerald-200/80 uppercase">
+                        <span>Dealer</span>
+                        <span id="dealerScore">Score: -</span>
+                    </div>
+                    <div id="dealerCards" class="flex gap-1.5 min-h-[74px] items-center justify-center">
+                        <div class="playing-card card-hidden">🂠</div>
+                        <div class="playing-card card-hidden">🂠</div>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="border-t border-emerald-600/30 w-3/4 mx-auto"></div>
+
+                <!-- Player Area -->
+                <div class="flex flex-col items-center gap-1">
+                    <div class="flex justify-between w-full px-2 text-[10px] font-bold text-emerald-200/80 uppercase">
+                        <span>Player (You)</span>
+                        <span id="playerScore">Score: -</span>
+                    </div>
+                    <div id="playerCards" class="flex gap-1.5 min-h-[74px] items-center justify-center">
+                        <div class="playing-card card-hidden">🂠</div>
+                        <div class="playing-card card-hidden">🂠</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Betting & Action Controls -->
+        <div class="glass-card rounded-3xl p-4 space-y-3">
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-bold text-slate-300 uppercase">Bet Amount (₹)</span>
+            </div>
+
+            <!-- Bet Input Box -->
+            <input type="number" id="betAmount" value="10" class="w-full bg-[#07090d] border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-amber-500 transition-all">
+
+            <!-- Quick Bets -->
+            <div class="space-y-1.5">
+                <div class="grid grid-cols-4 gap-1.5">
+                    <button onclick="setBet(10)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-[11px] font-bold text-slate-300 border border-slate-700/50">10</button>
+                    <button onclick="setBet(20)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-[11px] font-bold text-slate-300 border border-slate-700/50">20</button>
+                    <button onclick="setBet(50)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-[11px] font-bold text-slate-300 border border-slate-700/50">50</button>
+                    <button onclick="setBet(100)" class="quick-btn py-1.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-[11px] font-bold text-slate-300 border border-slate-700/50">100</button>
+                </div>
+
+                <div class="grid grid-cols-4 gap-1.5">
+                    <button onclick="setBet(300)" class="quick-btn py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded-xl text-[11px] font-bold text-amber-400 border border-slate-700/50">300</button>
+                    <button onclick="setBet(500)" class="quick-btn py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded-xl text-[11px] font-bold text-amber-400 border border-slate-700/50">500</button>
+                    <button onclick="setBet(700)" class="quick-btn py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded-xl text-[11px] font-bold text-amber-400 border border-slate-700/50">700</button>
+                    <button onclick="setBet(1000)" class="quick-btn py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded-xl text-[11px] font-bold text-amber-400 border border-slate-700/50">1000</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 pt-1" id="actionControls">
+                <button id="dealBtn" onclick="startBlackjack()" class="col-span-3 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/30 transition-all">DEAL CARDS</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Firebase & Game Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4d_UnCWkmKc3D65HjxvAGvJ4A5GXFIQQ",
+            authDomain: "nexuswin-aa829.firebaseapp.com",
+            databaseURL: "https://nexuswin-aa829-default-rtdb.firebaseio.com",
+            projectId: "nexuswin-aa829",
+            storageBucket: "nexuswin-aa829.firebasestorage.app",
+            messagingSenderId: "865579357605",
+            appId: "1:865579357605:web:7af15e869ce54756a8844c",
+            measurementId: "G-NTZY5VKYP0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let currentUser = null;
+        let userBalance = 0;
+        let currentBet = 10;
+        let playerHand = [];
+        let dealerHand = [];
+        let gameActive = false;
+        let currentUserWins = false;
+
+        // VIP Modern Large Screen Toast Function
+        function showVipToast(title, message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            container.innerHTML = ''; 
+            
+            const toast = document.createElement('div');
+            
+            let bgGradient = 'linear-gradient(135deg, #0f172aee 0%, #090d16ee 100%)';
+            let borderColor = '#334155';
+            let icon = '🃏';
+            let titleColor = 'text-white';
+
+            if(type === 'success') {
+                bgGradient = 'linear-gradient(135deg, #064e3b 0%, #022c22 100%)';
+                borderColor = '#10b981';
+                icon = '🏆';
+                titleColor = 'text-emerald-400';
+            } else if(type === 'error') {
+                bgGradient = 'linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)';
+                borderColor = '#f43f5e';
+                icon = '🚨';
+                titleColor = 'text-rose-400';
+            }
+
+            toast.className = `pointer-events-auto flex items-center gap-4 px-5 py-4 rounded-3xl shadow-2xl backdrop-blur-2xl border-2 vip-toast-enter max-w-sm w-full mx-4`;
+            toast.style.background = bgGradient;
+            toast.style.borderColor = borderColor;
+            toast.style.boxShadow = `0 20px 40px rgba(0,0,0,0.6), 0 0 20px ${borderColor}44`;
+            
+            toast.innerHTML = `
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl bg-black/30 border border-white/10 shrink-0 shadow-inner">
+                    ${icon}
+                </div>
+                <div class="flex-1">
+                    <div class="text-[13px] font-black uppercase tracking-wider ${titleColor}">${title}</div>
+                    <div class="text-xs font-semibold text-slate-200 mt-0.5">${message}</div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('vip-toast-enter');
+                toast.classList.add('vip-toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                onValue(ref(db, 'users/' + user.uid), (snap) => {
+                    if(snap.exists() && snap.val().balance !== undefined) {
+                        userBalance = snap.val().balance;
+                        document.getElementById('userBalance').innerText = `₹${userBalance.toFixed(2)}`;
+                    }
+                });
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        window.setBet = (amt) => { 
+            if(!gameActive) {
+                document.getElementById('betAmount').value = amt; 
+            }
+        }
+
+        function toggleControls(disable) {
+            const input = document.getElementById('betAmount');
+            input.disabled = disable;
+            
+            const quickBtns = document.querySelectorAll('.quick-btn');
+            quickBtns.forEach(btn => {
+                btn.disabled = disable;
+                if(disable) {
+                    btn.classList.add('opacity-40', 'cursor-not-allowed');
+                } else {
+                    btn.classList.remove('opacity-40', 'cursor-not-allowed');
+                }
+            });
+
+            if(disable) {
+                input.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                input.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function generateCardHTML(val, suit) {
+            let color = (suit === '♥' || suit === '♦') ? 'text-red-600' : 'text-slate-950';
+            return `<div class="playing-card ${color}">
+                        <span>${val}</span>
+                        <span class="text-center text-lg">${suit}</span>
+                        <span class="self-end rotate-180">${val}</span>
+                    </div>`;
+        }
+
+        function calculateScore(hand) {
+            let score = 0;
+            let aces = 0;
+            hand.forEach(c => {
+                if (c.val === 'A') {
+                    aces++;
+                    score += 11;
+                } else if (['K', 'Q', 'J', '10'].includes(c.val)) {
+                    score += 10;
+                } else {
+                    score += parseInt(c.val);
+                }
+            });
+            while (score > 21 && aces > 0) {
+                score -= 10;
+                aces--;
+            }
+            return score;
+        }
+
+        window.startBlackjack = async function() {
+            if(gameActive) return;
+            currentBet = parseFloat(document.getElementById('betAmount').value);
+            
+            if(!currentBet || currentBet < 10) { 
+                showVipToast("Invalid Bet", "Minimum bet amount is ₹10", "error"); 
+                return; 
+            }
+            if(currentBet > userBalance) { 
+                showVipToast("Low Balance", "Insufficient wallet balance to place bet!", "error"); 
+                return; 
+            }
+
+            gameActive = true;
+            toggleControls(true);
+
+            userBalance -= currentBet;
+            await update(ref(db, `users/${currentUser.uid}`), { balance: userBalance });
+
+            document.getElementById('gameStatus').innerHTML = `<span class="text-amber-400">Game in progress... Hit or Stand</span>`;
+
+            let roll = Math.random();
+            currentUserWins = roll < 0.35;
+
+            if (currentUserWins) {
+                playerHand = [{val: '10', suit: '♠'}, {val: 'A', suit: '♥'}]; 
+                dealerHand = [{val: '9', suit: '♣'}, {val: '8', suit: '♦'}];  
+            } else {
+                playerHand = [{val: '8', suit: '♠'}, {val: '5', suit: '♥'}];  
+                dealerHand = [{val: '10', suit: '♣'}, {val: '10', suit: '♦'}]; 
+            }
+
+            document.getElementById('playerCards').innerHTML = playerHand.map(c => generateCardHTML(c.val, c.suit)).join('');
+            document.getElementById('dealerCards').innerHTML = generateCardHTML(dealerHand[0].val, dealerHand[0].suit) + `<div class="playing-card card-hidden">🂠</div>`;
+
+            document.getElementById('playerScore').innerText = `Score: ${calculateScore(playerHand)}`;
+            document.getElementById('dealerScore').innerText = `Score: -`;
+
+            document.getElementById('actionControls').innerHTML = `
+                <button onclick="playerHit()" class="py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg">Hit</button>
+                <button onclick="playerStand()" class="py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider shadow-lg">Stand</button>
+                <button onclick="resetTable()" class="py-3 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs uppercase">Reset</button>
+            `;
+        }
+
+        window.playerHit = function() {
+            if(!gameActive) return;
+            let newCard = currentUserWins ? {val: '8', suit: '♦'} : {val: '9', suit: '♠'};
+            playerHand.push(newCard);
+            document.getElementById('playerCards').innerHTML = playerHand.map(c => generateCardHTML(c.val, c.suit)).join('');
+            let pScore = calculateScore(playerHand);
+            document.getElementById('playerScore').innerText = `Score: ${pScore}`;
+
+            if (pScore > 21) {
+                endGame(false, "Bust! You went over 21. Loss!");
+            }
+        }
+
+        window.playerStand = async function() {
+            if(!gameActive) return;
+            document.getElementById('dealerCards').innerHTML = dealerHand.map(c => generateCardHTML(c.val, c.suit)).join('');
+            document.getElementById('dealerScore').innerText = `Score: ${calculateScore(dealerHand)}`;
+
+            if (currentUserWins) {
+                let winAmt = currentBet * 2;
+                userBalance += winAmt;
+                await update(ref(db, `users/${currentUser.uid}`), { balance: userBalance });
+                endGame(true, `🎉 YOU WON ₹${winAmt.toFixed(2)}!`);
+            } else {
+                endGame(false, `💥 DEALER WINS! LOSS`);
+            }
+        }
+
+        function endGame(won, msg) {
+            gameActive = false;
+            toggleControls(false);
+
+            if(won) {
+                showVipToast("Big Win!", msg, "success");
+            } else {
+                showVipToast("Round Lost", msg, "error");
+            }
+
+            document.getElementById('gameStatus').innerHTML = `<span class="${won ? 'text-emerald-400' : 'text-rose-400'}">${msg}</span>`;
+            document.getElementById('actionControls').innerHTML = `
+                <button onclick="startBlackjack()" class="col-span-3 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/30 transition-all">PLAY AGAIN</button>
+            `;
+        }
+
+        window.resetTable = function() {
+            gameActive = false;
+            toggleControls(false);
+
+            document.getElementById('gameStatus').innerText = "Place your bet and click Deal!";
+            document.getElementById('playerCards').innerHTML = `<div class="playing-card card-hidden">🂠</div><div class="playing-card card-hidden">🂠</div>`;
+            document.getElementById('dealerCards').innerHTML = `<div class="playing-card card-hidden">🂠</div><div class="playing-card card-hidden">🂠</div>`;
+            document.getElementById('playerScore').innerText = "Score: -";
+            document.getElementById('dealerScore').innerText = "Score: -";
+            document.getElementById('actionControls').innerHTML = `
+                <button id="dealBtn" onclick="startBlackjack()" class="col-span-3 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/30 transition-all">DEAL CARDS</button>
+            `;
+        }
+    </script>
+</body>
+</html>
